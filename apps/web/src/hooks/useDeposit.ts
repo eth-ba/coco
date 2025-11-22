@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useWallets } from '@privy-io/react-auth';
-import { parseUnits, encodeFunctionData } from 'viem';
+import { parseUnits, createWalletClient, http, createPublicClient } from 'viem';
+import { customBase } from '@/lib/chains';
 import { 
   YIELD_AUTOMATOR_ADDRESS,
   USDC_ADDRESS,
@@ -60,8 +61,19 @@ export function useDeposit() {
     setTxHash(null);
 
     try {
-      // Get the Ethereum provider from the wallet
-      const provider = await smartAccount.getEthereumProvider();
+      // Create wallet client using custom Tenderly RPC
+      const customRpcUrl = customBase.rpcUrls.default.http[0];
+      
+      const walletClient = createWalletClient({
+        account: smartAccount.address as `0x${string}`,
+        chain: customBase,
+        transport: http(customRpcUrl) // Use Tenderly fork RPC
+      });
+
+      const publicClient = createPublicClient({
+        chain: customBase,
+        transport: http(customRpcUrl)
+      });
       
       // Parse amount to smallest unit (USDC has 6 decimals)
       const amount = parseUnits(amountUSDC, 6);
@@ -69,119 +81,51 @@ export function useDeposit() {
       console.log('💰 Depositing', amountUSDC, 'USDC via YieldAutomator');
       console.log('📍 YieldAutomator:', YIELD_AUTOMATOR_ADDRESS);
       console.log('📊 Strategy:', SIMPLE_VAULT_STRATEGY);
+      console.log('🌐 Using RPC:', customRpcUrl);
 
       // Step 1: Approve USDC to YieldAutomator contract
       console.log('Step 1/2: Approving USDC to YieldAutomator...');
-      const approveData = encodeFunctionData({
+      
+      const approveTxHash = await walletClient.writeContract({
+        address: USDC_ADDRESS as `0x${string}`,
         abi: erc20Abi,
         functionName: 'approve',
         args: [YIELD_AUTOMATOR_ADDRESS as `0x${string}`, amount]
       });
 
-      // Estimate gas for approval
-      const approveGasEstimate = await provider.request({
-        method: 'eth_estimateGas',
-        params: [{
-          from: smartAccount.address,
-          to: USDC_ADDRESS,
-          data: approveData
-        }]
-      });
-
-      console.log('⛽ Approval gas estimate:', approveGasEstimate);
-      
-      const approveTxHash = await provider.request({
-        method: 'eth_sendTransaction',
-        params: [{
-          from: smartAccount.address,
-          to: USDC_ADDRESS,
-          data: approveData,
-          gas: approveGasEstimate
-        }]
-      });
-
       console.log('✅ Approval transaction sent:', approveTxHash);
 
-      // Wait for approval to be mined (wait for receipt)
+      // Wait for approval to be mined
       console.log('⏳ Waiting for approval to be confirmed...');
-      let approvalConfirmed = false;
-      let attempts = 0;
-      const maxAttempts = 30; // 30 seconds max wait
-      
-      while (!approvalConfirmed && attempts < maxAttempts) {
-        try {
-          const receipt = await provider.request({
-            method: 'eth_getTransactionReceipt',
-            params: [approveTxHash]
-          });
-          
-          if (receipt && receipt.status === '0x1') {
-            approvalConfirmed = true;
-            console.log('✅ Approval confirmed in block:', receipt.blockNumber);
-          } else if (receipt && receipt.status === '0x0') {
-            throw new Error('Approval transaction failed');
-          } else {
-            // Not mined yet, wait and retry
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            attempts++;
-          }
-        } catch (err) {
-          if (attempts >= maxAttempts - 1) throw err;
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          attempts++;
-        }
+      const approvalReceipt = await publicClient.waitForTransactionReceipt({
+        hash: approveTxHash,
+        timeout: 30_000 // 30 seconds
+      });
+
+      if (approvalReceipt.status !== 'success') {
+        throw new Error('Approval transaction failed');
       }
-      
-      if (!approvalConfirmed) {
-        throw new Error('Approval transaction timeout - please try again');
-      }
+
+      console.log('✅ Approval confirmed in block:', approvalReceipt.blockNumber);
 
       // Step 2: Call YieldAutomator.deposit()
       console.log('Step 2/2: Calling YieldAutomator.deposit()...');
-      const depositData = encodeFunctionData({
+
+      const depositTxHash = await walletClient.writeContract({
+        address: YIELD_AUTOMATOR_ADDRESS as `0x${string}`,
         abi: yieldAutomatorAbi,
         functionName: 'deposit',
         args: [amount, BigInt(SIMPLE_VAULT_STRATEGY)]
       });
 
-      console.log('📝 Deposit transaction params:', {
-        from: smartAccount.address,
-        to: YIELD_AUTOMATOR_ADDRESS,
-        data: depositData,
-        amount: amount.toString(),
-        strategyIndex: SIMPLE_VAULT_STRATEGY
-      });
-
-      // Estimate gas for the deposit transaction
-      const gasEstimate = await provider.request({
-        method: 'eth_estimateGas',
-        params: [{
-          from: smartAccount.address,
-          to: YIELD_AUTOMATOR_ADDRESS,
-          data: depositData
-        }]
-      });
-
-      console.log('⛽ Gas estimate:', gasEstimate);
-
-      const depositTxHash = await provider.request({
-        method: 'eth_sendTransaction',
-        params: [{
-          from: smartAccount.address,
-          to: YIELD_AUTOMATOR_ADDRESS,
-          data: depositData,
-          gas: gasEstimate
-        }]
-      });
-
       console.log('✅ Deposit transaction sent:', depositTxHash);
       console.log('🎉 Funds deposited to strategy', SIMPLE_VAULT_STRATEGY);
 
-      setTxHash(depositTxHash as string);
+      setTxHash(depositTxHash);
       
       return {
         success: true,
-        txHash: depositTxHash as string,
+        txHash: depositTxHash,
         strategy: SIMPLE_VAULT_STRATEGY
       };
     } catch (err) {
