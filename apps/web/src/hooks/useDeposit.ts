@@ -4,7 +4,6 @@ import { parseUnits } from 'viem';
 import { 
   buildShipTransaction, 
   encodeApproveUSDC, 
-  AQUA_CONTRACT, 
   USDC_ADDRESS 
 } from '@/lib/aqua';
 

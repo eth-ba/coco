@@ -1,13 +1,10 @@
-import { AquaProtocolContract, AQUA_CONTRACT_ADDRESSES, Address, HexString } from '@1inch/aqua-sdk';
-import { encodeFunctionData, encodeAbiParameters, parseUnits } from 'viem';
-import { baseSepolia } from 'viem/chains';
+import { encodeFunctionData, encodeAbiParameters, keccak256 } from 'viem';
 
 // Aqua Protocol contract address (same across all chains)
-// Using the universal Aqua contract address for Base
 export const AQUA_CONTRACT = '0x499943e74fb0ce105688beee8ef2abec5d936d31' as const;
 
-// Base Sepolia USDC address (you'll need to replace with actual testnet address)
-export const USDC_ADDRESS = '0x036CbD53842c5426634e7929541eC2318f3dCF7e' as const; // Base Sepolia USDC
+// Base Sepolia USDC address
+export const USDC_ADDRESS = '0x036CbD53842c5426634e7929541eC2318f3dCF7e' as const;
 
 // ERC20 ABI for approve function
 const erc20Abi = [
@@ -20,22 +17,38 @@ const erc20Abi = [
     ],
     outputs: [{ name: '', type: 'bool' }],
     stateMutability: 'nonpayable'
-  },
-  {
-    type: 'function',
-    name: 'balanceOf',
-    inputs: [{ name: 'account', type: 'address' }],
-    outputs: [{ name: '', type: 'uint256' }],
-    stateMutability: 'view'
   }
 ] as const;
 
-// Initialize Aqua SDK
-export const aqua = new AquaProtocolContract(new Address(AQUA_CONTRACT));
+// Aqua Protocol ABI (from aqua.txt documentation)
+const aquaAbi = [
+  {
+    type: 'function',
+    name: 'ship',
+    inputs: [
+      { name: 'app', type: 'address' },
+      { name: 'strategy', type: 'bytes' },
+      { name: 'tokens', type: 'address[]' },
+      { name: 'amounts', type: 'uint256[]' }
+    ],
+    outputs: [{ name: 'strategyHash', type: 'bytes32' }],
+    stateMutability: 'nonpayable'
+  },
+  {
+    type: 'function',
+    name: 'dock',
+    inputs: [
+      { name: 'app', type: 'address' },
+      { name: 'strategyHash', type: 'bytes32' },
+      { name: 'tokens', type: 'address[]' }
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable'
+  }
+] as const;
 
 /**
  * Strategy structure for Aqua Protocol
- * This defines how liquidity is allocated
  */
 export interface AquaStrategy {
   maker: `0x${string}`;
@@ -70,15 +83,13 @@ export function encodeStrategy(strategy: AquaStrategy): `0x${string}` {
 /**
  * Calculate the strategy hash for a given strategy
  */
-export function calculateStrategyHash(strategy: AquaStrategy): string {
+export function calculateStrategyHash(strategy: AquaStrategy): `0x${string}` {
   const encodedStrategy = encodeStrategy(strategy);
-  const hash = AquaProtocolContract.calculateStrategyHash(new HexString(encodedStrategy));
-  return hash.toString();
+  return keccak256(encodedStrategy);
 }
 
 /**
  * Approve USDC to Aqua Protocol contract
- * This needs to be called once before shipping liquidity
  */
 export function encodeApproveUSDC(amount: bigint): `0x${string}` {
   return encodeFunctionData({
@@ -90,12 +101,7 @@ export function encodeApproveUSDC(amount: bigint): `0x${string}` {
 
 /**
  * Ship liquidity to Aqua Protocol
- * This creates a new strategy and deposits virtual balances
- * 
- * @param smartAccountAddress - The address of the user's smart account (maker)
- * @param amount - Amount of USDC to deposit (in smallest unit, e.g., 1000000 for 1 USDC)
- * @param appAddress - The Aqua app contract address (e.g., XYCSwap)
- * @returns Transaction data for shipping liquidity
+ * Returns encoded transaction data for the ship function
  */
 export function buildShipTransaction(
   smartAccountAddress: `0x${string}`,
@@ -103,68 +109,61 @@ export function buildShipTransaction(
   appAddress: `0x${string}`
 ) {
   // Create a simple strategy
-  // For now, we'll use a basic USDC strategy
-  // In production, you'd want to support multiple strategies
   const strategy: AquaStrategy = {
     maker: smartAccountAddress,
     token0: USDC_ADDRESS,
     token1: USDC_ADDRESS, // Same token for simplicity in MVP
-    feeBps: BigInt(0), // 0% fee for now
+    feeBps: BigInt(0), // 0% fee
     salt: '0x0000000000000000000000000000000000000000000000000000000000000001'
   };
 
   const encodedStrategy = encodeStrategy(strategy);
+  const strategyHash = calculateStrategyHash(strategy);
 
-  // Build ship transaction using Aqua SDK
-  const shipTx = aqua.ship({
-    app: new Address(appAddress),
-    strategy: new HexString(encodedStrategy),
-    amountsAndTokens: [
-      {
-        token: new Address(USDC_ADDRESS),
-        amount: amount
-      }
+  // Encode ship function call
+  const data = encodeFunctionData({
+    abi: aquaAbi,
+    functionName: 'ship',
+    args: [
+      appAddress,
+      encodedStrategy,
+      [USDC_ADDRESS],
+      [amount]
     ]
   });
 
   return {
-    ...shipTx,
-    strategyHash: calculateStrategyHash(strategy)
+    to: AQUA_CONTRACT,
+    data,
+    value: BigInt(0),
+    strategyHash
   };
 }
 
 /**
  * Dock liquidity from Aqua Protocol
- * This withdraws virtual balances and closes the strategy
- * 
- * @param appAddress - The Aqua app contract address
- * @param strategyHash - The hash of the strategy to dock
- * @returns Transaction data for docking liquidity
+ * Returns encoded transaction data for the dock function
  */
 export function buildDockTransaction(
   appAddress: `0x${string}`,
   strategyHash: `0x${string}`
 ) {
-  const dockTx = aqua.dock({
-    app: new Address(appAddress),
-    strategyHash: new HexString(strategyHash),
-    tokens: [new Address(USDC_ADDRESS)]
+  const data = encodeFunctionData({
+    abi: aquaAbi,
+    functionName: 'dock',
+    args: [
+      appAddress,
+      strategyHash,
+      [USDC_ADDRESS]
+    ]
   });
 
-  return dockTx;
-}
-
-/**
- * Get USDC balance of an address
- */
-export function encodeBalanceOf(address: `0x${string}`): `0x${string}` {
-  return encodeFunctionData({
-    abi: erc20Abi,
-    functionName: 'balanceOf',
-    args: [address]
-  });
+  return {
+    to: AQUA_CONTRACT,
+    data,
+    value: BigInt(0)
+  };
 }
 
 // Export constants
-export { erc20Abi };
-
+export { erc20Abi, aquaAbi };
