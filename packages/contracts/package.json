@@ -5,8 +5,12 @@
   "description": "Smart contracts for Coco platform",
   "scripts": {
     "build": "forge build",
-    "test": "forge test",
-    "deploy": "forge script script/Deploy.s.sol"
+    "test": "forge test -vv",
+    "test:gas": "forge test --gas-report",
+    "deploy:base-sepolia": "forge script script/Deploy.s.sol:DeployYieldAutomator --rpc-url base_sepolia --broadcast --verify",
+    "deploy:base": "forge script script/Deploy.s.sol:DeployYieldAutomator --rpc-url base --broadcast --verify",
+    "clean": "forge clean",
+    "fmt": "forge fmt"
   }
 }
 
