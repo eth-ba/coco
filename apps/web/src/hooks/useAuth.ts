@@ -1,11 +1,9 @@
 import { usePrivy, useWallets } from "@privy-io/react-auth";
-import { useAccount } from "wagmi";
 import { useEffect, useState } from "react";
 
 export function useAuth() {
   const { login, logout, authenticated, user, ready } = usePrivy();
   const { wallets } = useWallets();
-  const { address: wagmiAddress } = useAccount();
   const [smartAccountAddress, setSmartAccountAddress] = useState<string | null>(
     null
   );
@@ -33,7 +31,5 @@ export function useAuth() {
     ready,
     smartAccountAddress,
     embeddedWallet,
-    wagmiAddress,
   };
 }
-

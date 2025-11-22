@@ -1,0 +1,66 @@
+---
+description: Always know your current location and project structure
+globs: **/*
+alwaysApply: true
+---
+
+# Workspace Orientation
+
+**CRITICAL: Always verify your location before running commands**
+
+## Current Project Structure
+
+```
+/Users/jonathancruz/Desktop/coco/          # ROOT - Monorepo root
+├── apps/
+│   └── web/                                # Next.js PWA application
+│       ├── src/
+│       │   ├── app/                       # Next.js 14 App Router
+│       │   ├── components/                # React components
+│       │   └── hooks/                     # Custom hooks
+│       ├── package.json
+│       └── next.config.ts
+├── packages/
+│   ├── contracts/                         # Foundry smart contracts
+│   └── functions/                         # Chainlink Functions
+├── scripts/                               # PRDs and scripts
+├── package.json                           # Root package.json
+└── pnpm-workspace.yaml                    # Monorepo config
+```
+
+## Before Running Commands
+
+**✅ DO:**
+- Check current directory with `pwd` if unsure
+- Use absolute paths: `/Users/jonathancruz/Desktop/coco/`
+- For web app commands: `cd /Users/jonathancruz/Desktop/coco/apps/web && <command>`
+- For root commands: `cd /Users/jonathancruz/Desktop/coco && <command>`
+
+**❌ DON'T:**
+- Assume you're in the right directory
+- Use relative paths like `cd apps/web` without verifying location
+- Run commands without checking if the directory exists
+
+## Common Command Patterns
+
+```bash
+# Install dependencies (from root)
+cd /Users/jonathancruz/Desktop/coco && pnpm install
+
+# Run dev server
+cd /Users/jonathancruz/Desktop/coco/apps/web && pnpm dev
+
+# Build
+cd /Users/jonathancruz/Desktop/coco/apps/web && pnpm build
+
+# Clean install
+cd /Users/jonathancruz/Desktop/coco && rm -rf node_modules apps/web/node_modules pnpm-lock.yaml && pnpm install
+```
+
+## Verification Steps
+
+Before any file operation or command:
+1. **List directory** to confirm structure
+2. **Check if path exists** before cd
+3. **Use absolute paths** when in doubt
+4. **Verify package.json location** for npm/pnpm commands

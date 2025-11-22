@@ -11,6 +11,12 @@
     "clean": "pnpm -r exec rm -rf node_modules dist out .next"
   },
   "devDependencies": {},
+  "pnpm": {
+    "overrides": {
+      "viem": "2.39.3",
+      "@base-org/account": "2.4.0"
+    }
+  },
   "engines": {
     "node": ">=18.0.0",
     "pnpm": ">=8.0.0"

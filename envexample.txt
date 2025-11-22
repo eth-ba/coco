@@ -1,0 +1,18 @@
+# apps/web/.env.local
+
+# Privy Authentication
+NEXT_PUBLIC_PRIVY_APP_ID=clxxxxxxxxxxxxxxxxxxxxxxxx
+
+# Blockchain RPC URLs (optional, uses public RPCs by default)
+NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL=https://sepolia.base.org
+NEXT_PUBLIC_BASE_RPC_URL=https://mainnet.base.org
+
+# Aqua Protocol (already hardcoded)
+NEXT_PUBLIC_AQUA_CONTRACT=0x499943e74fb0ce105688beee8ef2abec5d936d31
+
+# Chainlink Functions (for later tasks)
+CHAINLINK_SUBSCRIPTION_ID=
+CHAINLINK_DON_ID=
+
+# WalletConnect (optional)
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=
