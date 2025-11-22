@@ -1,0 +1,756 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": "1",
+        "title": "Initialize Monorepo and Next.js PWA Boilerplate",
+        "description": "Set up the foundational project structure with pnpm workspace, Next.js 14 App Router, TailwindCSS, and PWA configuration.",
+        "details": "1. Initialize pnpm workspace with structure: `apps/web`, `packages/contracts`, `packages/functions`.\n2. Create Next.js 14 app in `apps/web` using App Router:\n   ```bash\n   pnpm create next-app@latest apps/web --typescript --tailwind --app\n   ```\n3. Configure PWA manifest in `apps/web/public/manifest.json`:\n   ```json\n   {\n     \"name\": \"Coco Butter\",\n     \"short_name\": \"Coco Butter\",\n     \"display\": \"standalone\",\n     \"start_url\": \"/\",\n     \"theme_color\": \"#000000\",\n     \"background_color\": \"#ffffff\",\n     \"icons\": [/* icon configs */]\n   }\n   ```\n4. Install `next-pwa` package and configure in `next.config.js`:\n   ```javascript\n   const withPWA = require('next-pwa')({\n     dest: 'public',\n     register: true,\n     skipWaiting: true\n   });\n   module.exports = withPWA({/* next config */});\n   ```\n5. Set up TailwindCSS with mobile-first breakpoints and custom theme.\n6. Create basic layout structure with bottom navigation component.\n7. Configure TypeScript paths for clean imports.",
+        "testStrategy": "1. Verify pnpm workspace structure is correct with `pnpm -r list`.\n2. Run `pnpm dev` and confirm Next.js app loads on localhost.\n3. Test PWA manifest by opening Chrome DevTools > Application > Manifest.\n4. Verify TailwindCSS is working by adding test utility classes.\n5. Test mobile responsiveness using Chrome DevTools device emulation.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Initialize pnpm workspace and create monorepo structure",
+            "description": "Set up the foundational monorepo structure with pnpm workspace configuration including apps/web, packages/contracts, and packages/functions directories.",
+            "dependencies": [],
+            "details": "1. Initialize pnpm workspace by creating pnpm-workspace.yaml in root with packages: ['apps/*', 'packages/*']. 2. Create directory structure: apps/web, packages/contracts, packages/functions. 3. Create root package.json with workspace configuration. 4. Initialize git repository and create .gitignore file. 5. Verify workspace setup with 'pnpm -r list' command.",
+            "status": "done",
+            "testStrategy": "Run 'pnpm -r list' to verify workspace structure is recognized. Check that all directories are created correctly. Verify pnpm-workspace.yaml is properly configured.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-22T05:17:01.044Z"
+          },
+          {
+            "id": 2,
+            "title": "Create Next.js 14 app with TypeScript and TailwindCSS",
+            "description": "Initialize Next.js 14 application in apps/web directory using App Router, TypeScript, and TailwindCSS with mobile-first configuration.",
+            "dependencies": [
+              1
+            ],
+            "details": "1. Run 'pnpm create next-app@latest apps/web --typescript --tailwind --app' to create Next.js app. 2. Configure TailwindCSS with mobile-first breakpoints in tailwind.config.js. 3. Set up custom theme colors (theme_color: #000000, background: #ffffff). 4. Configure TypeScript paths in tsconfig.json for clean imports (@/components/*, @/lib/*, etc.). 5. Create basic layout structure in app/layout.tsx. 6. Test dev server with 'pnpm dev'.",
+            "status": "done",
+            "testStrategy": "Run 'pnpm dev' and verify Next.js app loads on localhost:3000. Add test utility classes to verify TailwindCSS is working. Check TypeScript compilation with no errors. Test mobile responsiveness in browser DevTools.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-22T05:18:34.000Z"
+          },
+          {
+            "id": 3,
+            "title": "Configure PWA manifest and next-pwa integration",
+            "description": "Set up Progressive Web App configuration with manifest.json and integrate next-pwa package for service worker generation and PWA functionality.",
+            "dependencies": [
+              2
+            ],
+            "details": "1. Create manifest.json in apps/web/public with name: 'Coco Butter', short_name: 'Coco Butter', display: 'standalone', start_url: '/', theme_color: '#000000', background_color: '#ffffff'. 2. Add icon configurations for various sizes (192x192, 512x512). 3. Install next-pwa: 'pnpm add next-pwa'. 4. Configure next.config.js with withPWA wrapper: dest: 'public', register: true, skipWaiting: true. 5. Link manifest in app/layout.tsx metadata. 6. Create placeholder icons.",
+            "status": "done",
+            "testStrategy": "Open Chrome DevTools > Application > Manifest and verify manifest is loaded correctly. Check that service worker is registered in Application > Service Workers. Test PWA installation on mobile device. Verify icons display correctly.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-22T05:20:24.353Z"
+          },
+          {
+            "id": 4,
+            "title": "Create bottom navigation component with mobile-first design",
+            "description": "Build a reusable bottom navigation component for mobile PWA interface with proper routing and active state management.",
+            "dependencies": [
+              3
+            ],
+            "details": "1. Create components/BottomNav.tsx component with navigation items (Home, Ship, Withdraw, Profile). 2. Use Next.js Link component for client-side routing. 3. Implement active state highlighting using usePathname hook. 4. Style with TailwindCSS for mobile-first design with fixed positioning at bottom. 5. Add icons for each navigation item. 6. Integrate into root layout.tsx. 7. Create placeholder pages for each route (app/page.tsx, app/ship/page.tsx, app/withdraw/page.tsx, app/profile/page.tsx).",
+            "status": "done",
+            "testStrategy": "Navigate between routes and verify bottom navigation highlights active page. Test on mobile viewport sizes. Verify navigation is fixed at bottom and doesn't scroll. Check that all routes load correctly. Test touch interactions on mobile device.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-22T05:22:06.869Z"
+          },
+          {
+            "id": 5,
+            "title": "Verify complete setup and run integration tests",
+            "description": "Perform comprehensive testing of the entire monorepo setup, Next.js PWA configuration, and ensure all components work together correctly.",
+            "dependencies": [
+              4
+            ],
+            "details": "1. Run 'pnpm -r list' to verify all workspace packages are recognized. 2. Test Next.js dev server with 'pnpm dev' from root and apps/web. 3. Verify PWA manifest loads in Chrome DevTools Application tab. 4. Test mobile responsiveness across different viewport sizes. 5. Verify TypeScript compilation with no errors. 6. Test bottom navigation routing on mobile device. 7. Attempt PWA installation on iOS Safari and Chrome Android. 8. Document any issues and create README.md with setup instructions.",
+            "status": "done",
+            "testStrategy": "Complete end-to-end testing: verify pnpm workspace with 'pnpm -r list', run dev server and check localhost loads, inspect PWA manifest in DevTools, test all navigation routes, verify TailwindCSS styling, test PWA installation flow on real mobile devices (iOS Safari and Chrome Android), check offline behavior if service worker is active.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-22T05:25:14.068Z"
+          }
+        ],
+        "updatedAt": "2025-11-22T05:25:14.068Z"
+      },
+      {
+        "id": "2",
+        "title": "Integrate Privy Authentication with Smart Account Creation",
+        "description": "Implement Privy SDK for passkey-based authentication and automatic Smart Account (Safe/Kernel) provisioning.",
+        "details": "1. Install Privy SDK:\n   ```bash\n   pnpm add @privy-io/react-auth @privy-io/wagmi-connector wagmi viem\n   ```\n2. Create Privy provider wrapper in `apps/web/app/providers.tsx`:\n   ```typescript\n   import { PrivyProvider } from '@privy-io/react-auth';\n   export function Providers({ children }) {\n     return (\n       <PrivyProvider\n         appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID}\n         config={{\n           loginMethods: ['passkey'],\n           embeddedWallets: {\n             createOnLogin: 'users-without-wallets',\n             requireUserPasswordOnCreate: false\n           },\n           smartWallets: {\n             enabled: true,\n             provider: 'safe' // or 'kernel'\n           }\n         }}\n       >\n         {children}\n       </PrivyProvider>\n     );\n   }\n   ```\n3. Create authentication hook `useAuth.ts`:\n   ```typescript\n   import { usePrivy, useSmartAccount } from '@privy-io/react-auth';\n   export function useAuth() {\n     const { login, logout, authenticated, user } = usePrivy();\n     const { smartAccount, isLoading } = useSmartAccount();\n     return { login, logout, authenticated, user, smartAccount, isLoading };\n   }\n   ```\n4. Build login page with FaceID/TouchID trigger button.\n5. Create dashboard route that requires authentication.\n6. Store Smart Account address in state for later use.",
+        "testStrategy": "1. Test passkey creation flow on mobile device (iOS Safari/Chrome Android).\n2. Verify Smart Account address is deterministically generated and displayed.\n3. Test logout and re-login to confirm same Smart Account address.\n4. Check Smart Account deployment on Base Sepolia using block explorer.\n5. Verify authentication state persists across page refreshes.",
+        "priority": "high",
+        "dependencies": [
+          "1"
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Install Privy SDK and dependencies",
+            "description": "Install @privy-io/react-auth, @privy-io/wagmi-connector, wagmi, and viem packages using pnpm to enable Privy authentication functionality.",
+            "dependencies": [],
+            "details": "Run the command: pnpm add @privy-io/react-auth @privy-io/wagmi-connector wagmi viem. Verify installation by checking package.json and ensuring all packages are listed with correct versions. Confirm no dependency conflicts exist.",
+            "status": "done",
+            "testStrategy": "Verify package.json contains all four packages. Run pnpm install to ensure no errors. Check that node_modules contains the installed packages.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-22T05:36:08.878Z"
+          },
+          {
+            "id": 2,
+            "title": "Create Privy provider wrapper component",
+            "description": "Implement PrivyProvider wrapper in apps/web/app/providers.tsx with passkey login, embedded wallets, and Smart Account configuration.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create providers.tsx file with PrivyProvider component. Configure appId from environment variable NEXT_PUBLIC_PRIVY_APP_ID. Set loginMethods to ['passkey'], enable embeddedWallets with createOnLogin: 'users-without-wallets' and requireUserPasswordOnCreate: false. Enable smartWallets with provider set to 'safe' or 'kernel'. Export Providers function that wraps children.",
+            "status": "done",
+            "testStrategy": "Verify providers.tsx compiles without errors. Check that environment variable is properly referenced. Test that the component renders children correctly. Verify Privy configuration matches specification.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-22T05:36:54.868Z"
+          },
+          {
+            "id": 3,
+            "title": "Create custom authentication hook",
+            "description": "Build useAuth.ts hook that wraps Privy's usePrivy and useSmartAccount hooks to provide unified authentication interface.",
+            "dependencies": [
+              2
+            ],
+            "details": "Create useAuth.ts file that imports usePrivy and useSmartAccount from @privy-io/react-auth. Export useAuth function that destructures login, logout, authenticated, and user from usePrivy, and smartAccount and isLoading from useSmartAccount. Return all values as a single object for easy consumption by components.",
+            "status": "done",
+            "testStrategy": "Verify hook compiles and exports correctly. Test that hook can be imported in components. Verify TypeScript types are properly inferred. Test hook returns expected properties when used in a test component.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-22T05:37:21.900Z"
+          },
+          {
+            "id": 4,
+            "title": "Build login page with passkey authentication UI",
+            "description": "Create login page component with FaceID/TouchID trigger button that initiates Privy passkey authentication flow.",
+            "dependencies": [
+              3
+            ],
+            "details": "Create login page component that uses the useAuth hook. Implement UI with a prominent button to trigger the login() function. Add appropriate styling and user feedback for authentication states (loading, error, success). Include passkey/biometric icons to indicate FaceID/TouchID support. Handle authentication errors gracefully with user-friendly messages.",
+            "status": "done",
+            "testStrategy": "Test passkey creation flow on iOS Safari and Chrome Android. Verify button triggers Privy authentication modal. Test error handling with invalid credentials. Verify successful login redirects appropriately. Test UI responsiveness on mobile devices.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-22T05:38:14.146Z"
+          },
+          {
+            "id": 5,
+            "title": "Create protected dashboard route with Smart Account display",
+            "description": "Implement dashboard route that requires authentication and displays the user's Smart Account address with state management.",
+            "dependencies": [
+              4
+            ],
+            "details": "Create dashboard page component that checks authenticated state from useAuth hook. Redirect unauthenticated users to login page. Display user information and Smart Account address from smartAccount object. Implement state management to store Smart Account address for later use (using React state, context, or state management library). Add loading state handling while smartAccount is being provisioned. Include logout functionality.",
+            "status": "done",
+            "testStrategy": "Verify unauthenticated users are redirected to login. Test that Smart Account address is displayed after login. Verify logout functionality works correctly. Test that re-login shows the same Smart Account address (deterministic generation). Check Smart Account deployment on Base Sepolia block explorer.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-22T05:38:39.499Z"
+          }
+        ],
+        "updatedAt": "2025-11-22T05:38:39.499Z"
+      },
+      {
+        "id": "3",
+        "title": "Set Up Foundry Contracts Package and YieldAutomator Scaffold",
+        "description": "Initialize Foundry project structure and create the YieldAutomator.sol contract scaffold for Chainlink Automation integration.",
+        "details": "1. Initialize Foundry in `packages/contracts`:\n   ```bash\n   cd packages/contracts && forge init\n   ```\n2. Install Chainlink contracts:\n   ```bash\n   forge install smartcontractkit/chainlink-brownie-contracts\n   ```\n3. Create `YieldAutomator.sol`:\n   ```solidity\n   // SPDX-License-Identifier: MIT\n   pragma solidity ^0.8.19;\n   import \"@chainlink/contracts/src/v0.8/automation/AutomationCompatible.sol\";\n   import \"@chainlink/contracts/src/v0.8/functions/dev/v1_0_0/FunctionsClient.sol\";\n   \n   contract YieldAutomator is AutomationCompatibleInterface, FunctionsClient {\n     address public aquaProtocol;\n     mapping(address => uint256) public userCurrentStrategy;\n     \n     constructor(address _router, address _aqua) FunctionsClient(_router) {\n       aquaProtocol = _aqua;\n     }\n     \n     function checkUpkeep(bytes calldata) external view override returns (bool, bytes memory) {\n       // Logic to check if rebalancing needed\n     }\n     \n     function performUpkeep(bytes calldata performData) external override {\n       // Execute dock and ship operations\n     }\n   }\n   ```\n4. Create deployment script `script/Deploy.s.sol`.\n5. Configure `foundry.toml` for Base Sepolia RPC and optimizer settings.\n6. Set up `.env` for private keys and RPC URLs.",
+        "testStrategy": "1. Run `forge build` to verify compilation succeeds.\n2. Run `forge test` with basic unit tests for constructor.\n3. Deploy to Base Sepolia testnet using `forge script`.\n4. Verify contract on Basescan.\n5. Test basic contract interactions using `cast` commands.",
+        "priority": "high",
+        "dependencies": [
+          "1"
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Initialize Foundry project and install Chainlink dependencies",
+            "description": "Set up the Foundry project structure in packages/contracts and install required Chainlink contract dependencies for Automation and Functions integration.",
+            "dependencies": [],
+            "details": "Navigate to packages/contracts directory and run 'forge init' to initialize the Foundry project structure. Then install Chainlink contracts using 'forge install smartcontractkit/chainlink-brownie-contracts'. This creates the foundational project structure with src/, test/, script/, and lib/ directories.",
+            "status": "done",
+            "testStrategy": "Verify that forge init completes successfully and creates the expected directory structure. Confirm that Chainlink contracts are installed in the lib/ directory. Run 'forge build' to ensure the setup compiles without errors.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-22T06:40:38.858Z"
+          },
+          {
+            "id": 2,
+            "title": "Create YieldAutomator.sol contract scaffold with Chainlink integration",
+            "description": "Implement the YieldAutomator smart contract scaffold that inherits from AutomationCompatibleInterface and FunctionsClient for automated yield optimization.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create src/YieldAutomator.sol with SPDX-License-Identifier MIT and pragma solidity ^0.8.19. Import AutomationCompatible.sol and FunctionsClient.sol from Chainlink contracts. Implement the contract with state variables (aquaProtocol address, userCurrentStrategy mapping), constructor accepting router and aqua addresses, and stub implementations of checkUpkeep and performUpkeep functions with comments indicating their purpose.",
+            "status": "done",
+            "testStrategy": "Run 'forge build' to verify the contract compiles successfully. Create a basic constructor test in test/YieldAutomator.t.sol to verify the contract deploys with correct initial state. Use 'forge test -vv' to run tests and confirm constructor parameters are set correctly.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-22T06:40:38.862Z"
+          },
+          {
+            "id": 3,
+            "title": "Create deployment script for YieldAutomator contract",
+            "description": "Implement a Foundry deployment script to deploy the YieldAutomator contract to Base Sepolia testnet with proper configuration.",
+            "dependencies": [
+              2
+            ],
+            "details": "Create script/Deploy.s.sol that extends Script from forge-std. Implement the run() function that reads environment variables for router and Aqua protocol addresses, deploys YieldAutomator with these parameters, and logs the deployed contract address. Include proper error handling and use vm.startBroadcast() and vm.stopBroadcast() for transaction broadcasting.",
+            "status": "done",
+            "testStrategy": "Test the deployment script locally using 'forge script script/Deploy.s.sol'. Perform a dry-run deployment to Base Sepolia using '--rpc-url' flag without broadcasting. Verify the script compiles and generates the correct deployment transaction. Finally, execute actual deployment and verify contract address on Basescan.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-22T06:40:38.864Z"
+          },
+          {
+            "id": 4,
+            "title": "Configure foundry.toml with Base Sepolia settings and optimizer",
+            "description": "Set up the Foundry configuration file with Base Sepolia RPC endpoints, compiler optimizer settings, and remappings for Chainlink imports.",
+            "dependencies": [
+              1
+            ],
+            "details": "Edit foundry.toml to include [profile.default] section with solc version 0.8.19, optimizer enabled with 200 runs, and via_ir = true for better optimization. Add [rpc_endpoints] section with base_sepolia URL. Configure remappings for '@chainlink/contracts/' to point to the installed lib directory. Set etherscan API key configuration for Base Sepolia verification.",
+            "status": "done",
+            "testStrategy": "Verify configuration by running 'forge build' with verbose output to confirm optimizer settings are applied. Test RPC connection using 'cast block-number --rpc-url base_sepolia'. Verify remappings work correctly by checking that Chainlink imports resolve properly during compilation.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-22T06:40:38.865Z"
+          },
+          {
+            "id": 5,
+            "title": "Set up environment variables for private keys and RPC URLs",
+            "description": "Create .env file with secure configuration for private keys, RPC URLs, and API keys needed for deployment and contract interaction.",
+            "dependencies": [
+              4
+            ],
+            "details": "Create .env file in packages/contracts directory with variables: PRIVATE_KEY for deployment wallet, BASE_SEPOLIA_RPC_URL for network connection, BASESCAN_API_KEY for contract verification, AQUA_PROTOCOL_ADDRESS for the Aqua contract on Base Sepolia, and CHAINLINK_ROUTER_ADDRESS for Functions router. Add .env to .gitignore to prevent committing sensitive data. Create .env.example with placeholder values for documentation.",
+            "status": "done",
+            "testStrategy": "Verify .env file is properly loaded by running 'source .env' and echoing variables. Test that deployment script can read environment variables correctly. Confirm .env is in .gitignore by checking git status. Validate RPC URL connectivity using 'cast block-number' with the configured endpoint.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-22T06:40:38.867Z"
+          }
+        ],
+        "updatedAt": "2025-11-22T06:40:38.867Z"
+      },
+      {
+        "id": "4",
+        "title": "Implement Aqua Protocol SDK Integration and Ship Transaction",
+        "description": "Install Aqua SDK, implement USDC approval flow, and create the ship transaction to deposit funds into Aqua strategies.",
+        "details": "1. Install Aqua SDK:\n   ```bash\n   pnpm add @1inch/aqua-sdk\n   ```\n2. Create Aqua service `lib/aqua.ts`:\n   ```typescript\n   import { AquaSDK } from '@1inch/aqua-sdk';\n   import { createPublicClient, createWalletClient, http } from 'viem';\n   import { base } from 'viem/chains';\n   \n   const AQUA_CONTRACT = '0x499943e74fb0ce105688beee8ef2abec5d936d31';\n   const USDC_ADDRESS = '0x...';\n   \n   export async function shipToAqua(smartAccount, amount, strategyId) {\n     const aqua = new AquaSDK({ chainId: base.id });\n     \n     // 1. Approve USDC\n     const approveTx = await smartAccount.sendTransaction({\n       to: USDC_ADDRESS,\n       data: encodeFunctionData({\n         abi: erc20Abi,\n         functionName: 'approve',\n         args: [AQUA_CONTRACT, amount]\n       })\n     });\n     \n     // 2. Encode ship transaction\n     const shipData = aqua.encodeShip(strategyId, amount);\n     \n     // 3. Execute ship via Smart Account\n     const shipTx = await smartAccount.sendTransaction({\n       to: AQUA_CONTRACT,\n       data: shipData\n     });\n     \n     return shipTx;\n   }\n   ```\n3. Create deposit form component with amount input and strategy selector.\n4. Implement optimistic UI updates for pending transactions.\n5. Add error handling for insufficient balance and failed transactions.",
+        "testStrategy": "1. Test USDC approval transaction on Base Sepolia with test tokens.\n2. Verify ship transaction executes successfully and funds appear in Aqua.\n3. Check Smart Account balance using Aqua contract `balanceOf` method.\n4. Test with various amounts including edge cases (0, max balance).\n5. Verify transaction receipts and event emissions on block explorer.",
+        "priority": "high",
+        "dependencies": [
+          "2"
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Install Aqua SDK and setup project dependencies",
+            "description": "Install the @1inch/aqua-sdk package and ensure all required dependencies are properly configured in the project.",
+            "dependencies": [],
+            "details": "Run 'pnpm add @1inch/aqua-sdk' to install the Aqua Protocol SDK. Verify that viem and other required dependencies are already installed from previous tasks. Update package.json and ensure the SDK version is compatible with the Base chain configuration.",
+            "status": "pending",
+            "testStrategy": "Verify the package is listed in package.json and node_modules. Check that the SDK can be imported without errors in a test file.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Create Aqua service with USDC approval flow",
+            "description": "Implement the Aqua service module in lib/aqua.ts with USDC token approval functionality for the Aqua contract.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create lib/aqua.ts file and implement the USDC approval logic. Initialize AquaSDK with Base chain configuration. Define constants for AQUA_CONTRACT (0x499943e74fb0ce105688beee8ef2abec5d936d31) and USDC_ADDRESS. Implement approval transaction using encodeFunctionData with erc20Abi to approve the Aqua contract to spend USDC tokens. Handle transaction submission through the Smart Account.",
+            "status": "pending",
+            "testStrategy": "Test USDC approval transaction on Base Sepolia with test tokens. Verify the approval transaction is submitted successfully and check allowance using the USDC contract's allowance method.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Implement ship transaction function for depositing to Aqua",
+            "description": "Complete the shipToAqua function that encodes and executes the ship transaction to deposit USDC into Aqua strategies.",
+            "dependencies": [
+              2
+            ],
+            "details": "Extend lib/aqua.ts with the shipToAqua function that takes smartAccount, amount, and strategyId parameters. Use aqua.encodeShip() to encode the ship transaction data. Execute the ship transaction through the Smart Account's sendTransaction method targeting the AQUA_CONTRACT. Return the transaction hash and implement proper error handling for transaction failures.",
+            "status": "pending",
+            "testStrategy": "Verify ship transaction executes successfully on Base Sepolia and funds appear in Aqua. Check Smart Account balance using Aqua contract balanceOf method. Test with various amounts including edge cases (0, max balance).",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Create deposit form component with strategy selector",
+            "description": "Build the user interface component for depositing funds, including amount input field and strategy selection dropdown.",
+            "dependencies": [
+              3
+            ],
+            "details": "Create a deposit form component with input field for USDC amount, dropdown/selector for available Aqua strategies, and submit button. Fetch available strategies from Aqua SDK. Display user's current USDC balance and validate that deposit amount doesn't exceed balance. Include proper form validation and disable submit button during transaction processing. Show transaction status and confirmation messages.",
+            "status": "pending",
+            "testStrategy": "Test form validation with invalid inputs (negative amounts, exceeding balance). Verify strategy list loads correctly. Test the complete deposit flow from form submission to transaction confirmation.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 5,
+            "title": "Implement optimistic UI updates and error handling",
+            "description": "Add optimistic UI updates for pending transactions and comprehensive error handling for insufficient balance and failed transactions.",
+            "dependencies": [
+              4
+            ],
+            "details": "Implement optimistic UI that immediately updates the displayed balance when a transaction is submitted, before blockchain confirmation. Add loading states and transaction pending indicators. Implement error handling for common failure scenarios: insufficient USDC balance, approval failures, ship transaction failures, network errors. Display user-friendly error messages and provide retry options. Revert optimistic updates if transactions fail. Add transaction history tracking.",
+            "status": "pending",
+            "testStrategy": "Test insufficient balance scenario and verify proper error message. Test failed approval and ship transactions. Verify optimistic UI updates correctly and reverts on failure. Check that transaction status updates properly in all scenarios.",
+            "parentId": "undefined"
+          }
+        ]
+      },
+      {
+        "id": "5",
+        "title": "Build Dashboard with Real-time Balance and APY Display",
+        "description": "Create the main dashboard UI that displays unified balance, current APY, and lifetime earnings by reading from Aqua contracts.",
+        "details": "1. Create dashboard page `app/dashboard/page.tsx` with mobile-first layout.\n2. Implement balance fetching hook `useAquaBalance.ts`:\n   ```typescript\n   import { useReadContract } from 'wagmi';\n   \n   export function useAquaBalance(smartAccountAddress, strategyId) {\n     const { data: balance } = useReadContract({\n       address: AQUA_CONTRACT,\n       abi: aquaAbi,\n       functionName: 'balanceOf',\n       args: [smartAccountAddress, strategyId],\n       watch: true\n     });\n     return balance;\n   }\n   ```\n3. Create APY fetching service (initially mock data, later from Chainlink):\n   ```typescript\n   export async function getCurrentAPY(strategyId) {\n     // Mock for now: return { apy: 8.5, strategyId }\n     // Later: fetch from Chainlink Functions result\n   }\n   ```\n4. Build dashboard components:\n   - TotalBalanceCard: Large display of unified USDC balance\n   - APYCard: Current earning rate with trend indicator\n   - EarningsCard: Lifetime earnings calculation\n5. Implement auto-refresh every 30 seconds.\n6. Add loading skeletons and error states.\n7. Style with TailwindCSS using large touch-friendly buttons.",
+        "testStrategy": "1. Verify balance updates after deposit transaction completes.\n2. Test with multiple strategies and confirm correct balance aggregation.\n3. Check APY display updates when mock data changes.\n4. Test loading states by throttling network in DevTools.\n5. Verify mobile responsiveness on various screen sizes.\n6. Test auto-refresh behavior over 2-3 minutes.",
+        "priority": "high",
+        "dependencies": [
+          "4"
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create dashboard page with mobile-first layout",
+            "description": "Set up the main dashboard page structure at app/dashboard/page.tsx with responsive mobile-first design using TailwindCSS",
+            "dependencies": [],
+            "details": "Create app/dashboard/page.tsx with a mobile-first layout structure. Use TailwindCSS for styling with large touch-friendly elements. Set up the basic page structure with containers for balance, APY, and earnings cards. Implement responsive grid layout that adapts from mobile to desktop views.",
+            "status": "pending",
+            "testStrategy": "Verify responsive layout on mobile (320px), tablet (768px), and desktop (1024px+) viewports. Test touch interactions on mobile devices. Validate TailwindCSS classes render correctly.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Implement balance fetching hook useAquaBalance.ts",
+            "description": "Create a custom React hook to fetch and watch real-time balance from Aqua contracts using wagmi's useReadContract",
+            "dependencies": [
+              1
+            ],
+            "details": "Create hooks/useAquaBalance.ts that uses wagmi's useReadContract to fetch balance from AQUA_CONTRACT. Implement the balanceOf function call with smartAccountAddress and strategyId parameters. Enable watch mode for real-time updates. Handle loading and error states. Return formatted balance data.",
+            "status": "pending",
+            "testStrategy": "Test hook with valid smart account address and strategy ID. Verify balance updates when contract state changes. Test error handling with invalid addresses. Confirm watch mode triggers re-renders on balance changes.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Create APY fetching service with mock data",
+            "description": "Build APY fetching service that initially returns mock data and is structured to later integrate with Chainlink Functions",
+            "dependencies": [
+              1
+            ],
+            "details": "Create lib/apy-service.ts with getCurrentAPY function that accepts strategyId. Implement mock data return structure: { apy: 8.5, strategyId, timestamp }. Add TypeScript interfaces for APY data. Structure the service to easily swap mock implementation with Chainlink Functions integration later. Include multiple strategy mock data.",
+            "status": "pending",
+            "testStrategy": "Test getCurrentAPY returns correct mock data for different strategy IDs. Verify TypeScript types are correct. Test error handling for invalid strategy IDs. Confirm data structure matches expected format for UI components.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Build dashboard card components (TotalBalanceCard, APYCard, EarningsCard)",
+            "description": "Create three main dashboard components to display unified balance, current APY with trend indicator, and lifetime earnings",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Create components/dashboard/TotalBalanceCard.tsx to display large unified USDC balance. Build components/dashboard/APYCard.tsx with current earning rate and trend indicator (up/down arrow). Implement components/dashboard/EarningsCard.tsx for lifetime earnings calculation. Use data from useAquaBalance hook and APY service. Style with TailwindCSS using large fonts and touch-friendly design. Add loading skeletons for each card.",
+            "status": "pending",
+            "testStrategy": "Test each component renders correctly with mock data. Verify loading skeletons display during data fetch. Test balance formatting (decimals, commas). Validate APY trend indicator shows correct direction. Test earnings calculation accuracy.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 5,
+            "title": "Implement auto-refresh, error states, and final polish",
+            "description": "Add 30-second auto-refresh functionality, comprehensive error handling, and final UI polish for the dashboard",
+            "dependencies": [
+              4
+            ],
+            "details": "Implement useEffect with 30-second interval to refresh APY and balance data. Create error boundary components for graceful error handling. Build error state UI components with retry functionality. Add loading skeletons for all data states. Implement toast notifications for errors. Test all interactive states and ensure smooth transitions between loading, success, and error states.",
+            "status": "pending",
+            "testStrategy": "Verify auto-refresh triggers every 30 seconds. Test error states by simulating network failures. Confirm loading skeletons appear during refresh. Test retry functionality on errors. Verify mobile responsiveness with DevTools throttling. Check balance updates after deposit transactions complete.",
+            "parentId": "undefined"
+          }
+        ]
+      },
+      {
+        "id": "6",
+        "title": "Implement Withdraw Flow with Aqua Dock Transaction",
+        "description": "Create the withdrawal interface and implement the dock transaction to withdraw funds from Aqua strategies back to the Smart Account.",
+        "details": "1. Create withdraw modal component with amount input.\n2. Implement dock transaction in `lib/aqua.ts`:\n   ```typescript\n   export async function dockFromAqua(smartAccount, amount, strategyId) {\n     const aqua = new AquaSDK({ chainId: base.id });\n     \n     // Encode dock transaction\n     const dockData = aqua.encodeDock(strategyId, amount);\n     \n     // Execute via Smart Account\n     const dockTx = await smartAccount.sendTransaction({\n       to: AQUA_CONTRACT,\n       data: dockData\n     });\n     \n     return dockTx;\n   }\n   ```\n3. Add validation for withdrawal amount (must be <= balance).\n4. Implement \"Withdraw All\" quick action button.\n5. Show transaction confirmation with estimated time.\n6. Update balance optimistically after withdrawal initiated.\n7. Add success/error toast notifications.",
+        "testStrategy": "1. Test partial withdrawal and verify remaining balance is correct.\n2. Test \"Withdraw All\" functionality.\n3. Verify funds return to Smart Account after dock completes.\n4. Test edge cases: withdraw 0, withdraw more than balance.\n5. Check transaction status updates and error handling.\n6. Verify balance updates correctly in dashboard after withdrawal.",
+        "priority": "medium",
+        "dependencies": [
+          "4"
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create withdraw modal component with amount input and validation",
+            "description": "Build a modal component for the withdrawal interface with amount input field, balance display, and validation logic to ensure withdrawal amount does not exceed available balance.",
+            "dependencies": [],
+            "details": "Create a new modal component (e.g., WithdrawModal.tsx) with an amount input field, display current balance, implement real-time validation to check that withdrawal amount is <= balance, add visual feedback for invalid amounts, and include a cancel button. Use the existing modal pattern from the project and ensure mobile-first responsive design.",
+            "status": "pending",
+            "testStrategy": "Test input validation with various amounts (0, negative, exceeds balance, valid amounts). Verify error messages display correctly. Test modal open/close functionality. Check mobile responsiveness.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Implement dockFromAqua function in lib/aqua.ts",
+            "description": "Create the core dock transaction function that encodes the withdrawal transaction using Aqua SDK and executes it through the Smart Account to withdraw funds from Aqua strategies.",
+            "dependencies": [
+              1
+            ],
+            "details": "Add the dockFromAqua function to lib/aqua.ts that accepts smartAccount, amount, and strategyId parameters. Initialize AquaSDK with Base chain ID, use aqua.encodeDock() to encode the transaction data, execute the transaction via smartAccount.sendTransaction() to the AQUA_CONTRACT address, handle transaction response and errors, and return the transaction hash.",
+            "status": "pending",
+            "testStrategy": "Test dock transaction with various amounts on Base Sepolia. Verify transaction executes successfully and returns valid transaction hash. Test error handling for failed transactions. Verify funds are withdrawn from Aqua strategy.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Add 'Withdraw All' quick action button and transaction confirmation UI",
+            "description": "Implement a quick action button to withdraw the entire balance and create a transaction confirmation screen showing estimated completion time before executing the withdrawal.",
+            "dependencies": [
+              1
+            ],
+            "details": "Add a 'Withdraw All' button to the withdraw modal that auto-fills the input with the full balance. Create a confirmation screen/step that displays the withdrawal amount, destination (Smart Account address), estimated transaction time, and gas fees. Include 'Confirm' and 'Go Back' buttons. Ensure the confirmation UI follows the existing design system.",
+            "status": "pending",
+            "testStrategy": "Test 'Withdraw All' button correctly populates full balance. Verify confirmation screen displays all required information accurately. Test navigation between modal steps. Verify estimated time calculation is reasonable.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Implement optimistic balance updates and transaction state management",
+            "description": "Add optimistic UI updates to immediately reflect balance changes when withdrawal is initiated, and implement transaction state tracking to monitor withdrawal progress.",
+            "dependencies": [
+              2
+            ],
+            "details": "Create a transaction state management system (using React state/context or a state management library) to track withdrawal transaction status (pending, confirmed, failed). Implement optimistic balance update that immediately reduces displayed balance when withdrawal is initiated. Add logic to revert optimistic update if transaction fails. Poll or watch for transaction confirmation and update final balance when confirmed.",
+            "status": "pending",
+            "testStrategy": "Verify balance updates immediately when withdrawal initiates. Test balance reverts correctly on transaction failure. Confirm final balance matches actual on-chain balance after transaction confirms. Test with network delays.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 5,
+            "title": "Add success/error toast notifications for withdrawal transactions",
+            "description": "Implement toast notification system to provide user feedback for withdrawal transaction success, failure, and pending states with appropriate messages.",
+            "dependencies": [
+              4
+            ],
+            "details": "Integrate or create a toast notification component (e.g., using react-hot-toast or similar library). Add toast notifications for: withdrawal initiated (pending), withdrawal successful with transaction link, withdrawal failed with error message. Include transaction hash in success toast with link to block explorer. Ensure toasts are dismissible and have appropriate duration. Style toasts to match the app design system.",
+            "status": "pending",
+            "testStrategy": "Test toast appears for successful withdrawal with correct message and transaction link. Verify error toast displays with meaningful error message on failure. Test pending toast during transaction processing. Verify toasts are dismissible and auto-dismiss after appropriate time.",
+            "parentId": "undefined"
+          }
+        ]
+      },
+      {
+        "id": "7",
+        "title": "Develop Chainlink Functions Script for APY Data Fetching",
+        "description": "Create the Chainlink Functions JavaScript script to fetch off-chain APY data for different Aqua strategies.",
+        "details": "1. Create `packages/functions/check-yield.js`:\n   ```javascript\n   // Chainlink Functions script\n   const strategyIds = args[0]; // Array of strategy IDs to check\n   \n   // Mock APY data (in production, fetch from Aqua API or DeFiLlama)\n   const apyData = [\n     { strategyId: '0x...', apy: 12.5, tvl: 1000000 },\n     { strategyId: '0x...', apy: 8.3, tvl: 2000000 }\n   ];\n   \n   // Find highest APY strategy\n   const bestStrategy = apyData.reduce((best, current) => \n     current.apy > best.apy ? current : best\n   );\n   \n   // Return encoded response\n   return Functions.encodeString(JSON.stringify(bestStrategy));\n   ```\n2. Create Functions subscription setup script.\n3. Upload script to IPFS or use inline source.\n4. Configure DON (Decentralized Oracle Network) settings.\n5. Create request builder in `YieldAutomator.sol`:\n   ```solidity\n   function requestYieldData() internal returns (bytes32) {\n     FunctionsRequest.Request memory req;\n     req.initializeRequestForInlineJavaScript(source);\n     req.addArgs([strategyId1, strategyId2]);\n     return _sendRequest(req.encodeCBOR(), subscriptionId, gasLimit, donID);\n   }\n   ```\n6. Implement callback handler `fulfillRequest`.",
+        "testStrategy": "1. Test Functions script locally using Chainlink Functions simulator.\n2. Deploy script and verify it returns valid JSON.\n3. Test callback in YieldAutomator contract on testnet.\n4. Verify APY data is correctly parsed and stored.\n5. Check subscription balance and gas usage.\n6. Test with multiple strategy IDs and edge cases.",
+        "priority": "medium",
+        "dependencies": [
+          "3"
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Chainlink Functions JavaScript script for APY data fetching",
+            "description": "Develop the check-yield.js script that fetches off-chain APY data from Aqua strategies or DeFiLlama API and returns the best strategy based on APY comparison.",
+            "dependencies": [],
+            "details": "Create `packages/functions/check-yield.js` with the following: Parse strategyIds from args[0], implement API calls to fetch real APY data from Aqua API or DeFiLlama (with mock fallback for testing), implement logic to find the highest APY strategy using reduce, encode response using Functions.encodeString with JSON.stringify, add error handling for API failures, and include TVL data in response.",
+            "status": "pending",
+            "testStrategy": "Test the script locally using Chainlink Functions simulator with mock strategy IDs. Verify it returns valid JSON with strategyId, apy, and tvl fields. Test error handling with invalid inputs and API failures.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Create Functions subscription setup and configuration script",
+            "description": "Develop a script to create and configure Chainlink Functions subscription, fund it with LINK tokens, and add the YieldAutomator contract as a consumer.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create `packages/functions/setup-subscription.js` that uses Chainlink Functions SDK to create a new subscription, fund it with LINK tokens from the deployer wallet, add the YieldAutomator contract address as an authorized consumer, configure gas limits and callback gas limit parameters, and store subscription ID in environment variables or deployment artifacts for contract initialization.",
+            "status": "pending",
+            "testStrategy": "Run the setup script on Base Sepolia testnet. Verify subscription is created and funded by checking Chainlink Functions dashboard. Confirm YieldAutomator contract is added as consumer. Test with minimal LINK amount first.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Upload Functions script to IPFS and configure DON settings",
+            "description": "Upload the check-yield.js script to IPFS for decentralized storage and configure the Decentralized Oracle Network (DON) settings for Base Sepolia.",
+            "dependencies": [
+              1
+            ],
+            "details": "Use IPFS client (like Pinata or nft.storage) to upload check-yield.js and obtain IPFS hash. Alternatively, prepare inline source code string for direct use. Configure DON ID for Base Sepolia network (obtain from Chainlink documentation). Set appropriate gas limits (callbackGasLimit: 300000 recommended). Store IPFS hash and DON ID in contract deployment configuration. Document both IPFS and inline source approaches for flexibility.",
+            "status": "pending",
+            "testStrategy": "Verify IPFS upload by accessing the script via IPFS gateway. Confirm DON ID matches Base Sepolia network configuration from Chainlink docs. Test script retrieval and execution using Chainlink Functions playground.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Implement requestYieldData function in YieldAutomator.sol",
+            "description": "Create the request builder function in YieldAutomator contract that initializes and sends Chainlink Functions requests with strategy IDs as arguments.",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Implement `requestYieldData()` internal function that creates FunctionsRequest.Request memory object, initializes it with inline JavaScript source or IPFS hash, adds strategy IDs array as arguments using req.addArgs(), encodes the request using req.encodeCBOR(), sends request using _sendRequest() with subscriptionId, gasLimit (300000), and donID parameters, stores the returned requestId for tracking, and emits RequestSent event with requestId and timestamp.",
+            "status": "pending",
+            "testStrategy": "Deploy contract to Base Sepolia and call requestYieldData(). Verify request is sent by checking Chainlink Functions dashboard for pending requests. Monitor transaction logs for RequestSent event. Confirm subscription balance decreases appropriately.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 5,
+            "title": "Implement fulfillRequest callback handler in YieldAutomator.sol",
+            "description": "Create the callback function that receives and processes APY data from Chainlink Functions, parses the response, and updates contract state with the best strategy information.",
+            "dependencies": [
+              4
+            ],
+            "details": "Implement `fulfillRequest(bytes32 requestId, bytes memory response, bytes memory err)` function that overrides FunctionsClient callback, decodes response using Functions.decodeString(), parses JSON to extract strategyId, apy, and tvl fields, validates the data (check APY is reasonable, strategyId is valid), updates contract state variables (bestStrategyId, bestStrategyAPY, lastUpdateTime), emits YieldDataUpdated event with new values, handles errors by emitting RequestFailed event, and includes access control to ensure only DON can call this function.",
+            "status": "pending",
+            "testStrategy": "Test callback with mock response data using Hardhat. Deploy to Base Sepolia and trigger real request, then verify callback is executed and state is updated correctly. Check event emissions in block explorer. Test error handling by simulating failed requests.",
+            "parentId": "undefined"
+          }
+        ]
+      },
+      {
+        "id": "8",
+        "title": "Complete YieldAutomator Logic with Automated Rebalancing",
+        "description": "Implement the full checkUpkeep and performUpkeep logic in YieldAutomator.sol to automatically rebalance funds between Aqua strategies.",
+        "details": "1. Complete `checkUpkeep` implementation:\n   ```solidity\n   function checkUpkeep(bytes calldata) external view override returns (bool upkeepNeeded, bytes memory performData) {\n     // Check if we have fresh APY data from Chainlink Functions\n     if (block.timestamp - lastUpdateTime < UPDATE_INTERVAL) {\n       return (false, \"\");\n     }\n     \n     // Check if better strategy exists (APY difference > threshold)\n     if (bestStrategyAPY - currentStrategyAPY > REBALANCE_THRESHOLD) {\n       performData = abi.encode(userAddress, currentStrategy, bestStrategy);\n       return (true, performData);\n     }\n     return (false, \"\");\n   }\n   ```\n2. Implement `performUpkeep`:\n   ```solidity\n   function performUpkeep(bytes calldata performData) external override {\n     (address user, uint256 fromStrategy, uint256 toStrategy) = abi.decode(performData, (address, uint256, uint256));\n     \n     // Get user's balance in current strategy\n     uint256 balance = IAqua(aquaProtocol).balanceOf(user, fromStrategy);\n     \n     // Dock from old strategy\n     IAqua(aquaProtocol).dock(fromStrategy, balance);\n     \n     // Ship to new strategy\n     IAqua(aquaProtocol).ship(toStrategy, balance);\n     \n     emit Rebalanced(user, fromStrategy, toStrategy, balance);\n   }\n   ```\n3. Add Smart Account module/delegate permissions setup.\n4. Implement safety checks and reentrancy guards.\n5. Add events for monitoring.\n6. Register Upkeep on Chainlink Automation UI.",
+        "testStrategy": "1. Unit test checkUpkeep with various APY scenarios.\n2. Test performUpkeep with mock Aqua contract.\n3. Deploy and register Upkeep on Base Sepolia.\n4. Simulate APY change and verify automatic rebalancing triggers.\n5. Monitor Chainlink Automation dashboard for execution logs.\n6. Verify funds correctly move between strategies on-chain.",
+        "priority": "medium",
+        "dependencies": [
+          "7"
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Complete checkUpkeep implementation with APY comparison logic",
+            "description": "Implement the full checkUpkeep function that verifies fresh APY data from Chainlink Functions and determines if rebalancing is needed based on APY threshold differences.",
+            "dependencies": [],
+            "details": "Implement checkUpkeep function in YieldAutomator.sol that: 1) Checks if sufficient time has passed since last update using UPDATE_INTERVAL, 2) Compares bestStrategyAPY vs currentStrategyAPY against REBALANCE_THRESHOLD, 3) Encodes performData with user address, current strategy ID, and best strategy ID, 4) Returns upkeepNeeded boolean and performData bytes. Add state variables for lastUpdateTime, bestStrategyAPY, currentStrategyAPY, UPDATE_INTERVAL, and REBALANCE_THRESHOLD constants.",
+            "status": "pending",
+            "testStrategy": "Write unit tests for checkUpkeep with scenarios: 1) Recent update (should return false), 2) Stale data but insufficient APY difference (should return false), 3) Stale data with APY difference exceeding threshold (should return true with correct performData), 4) Edge case with equal APYs, 5) Verify performData encoding/decoding correctness.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Implement performUpkeep with Aqua dock and ship operations",
+            "description": "Create the performUpkeep function that executes the actual rebalancing by docking funds from the current strategy and shipping them to the better-performing strategy.",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement performUpkeep function that: 1) Decodes performData to extract user address, fromStrategy ID, and toStrategy ID, 2) Calls IAqua.balanceOf to get user's current balance in fromStrategy, 3) Executes IAqua.dock(fromStrategy, balance) to withdraw funds, 4) Executes IAqua.ship(toStrategy, balance) to deposit into new strategy, 5) Emits Rebalanced event with all relevant parameters. Create IAqua interface with balanceOf, dock, and ship function signatures. Add aquaProtocol address state variable.",
+            "status": "pending",
+            "testStrategy": "Test performUpkeep with mock Aqua contract: 1) Verify correct decoding of performData, 2) Test successful dock and ship sequence, 3) Verify Rebalanced event emission with correct parameters, 4) Test with various balance amounts, 5) Mock IAqua interface and verify correct function calls with expected arguments.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Add safety checks, reentrancy guards, and access control",
+            "description": "Implement comprehensive security measures including reentrancy protection, input validation, and access control to ensure safe execution of automated rebalancing operations.",
+            "dependencies": [
+              2
+            ],
+            "details": "Add security features: 1) Import and apply ReentrancyGuard from OpenZeppelin to performUpkeep function, 2) Add onlyForwarder modifier to restrict performUpkeep calls to Chainlink Automation forwarder address, 3) Validate performData is not empty and decoded values are valid (non-zero addresses, valid strategy IDs), 4) Add balance checks before dock/ship operations, 5) Implement emergency pause mechanism with Pausable pattern, 6) Add require statements for APY threshold validation in checkUpkeep, 7) Store and validate forwarder address in constructor.",
+            "status": "pending",
+            "testStrategy": "Security testing: 1) Attempt reentrancy attack on performUpkeep and verify it fails, 2) Test unauthorized caller attempting performUpkeep (should revert), 3) Test with invalid performData (empty, malformed) and verify proper reversion, 4) Test pause functionality stops execution, 5) Verify only owner can pause/unpause, 6) Test edge cases with zero balances and invalid strategy IDs.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Implement Smart Account permissions and monitoring events",
+            "description": "Set up Smart Account module/delegate permissions for YieldAutomator to execute transactions on behalf of users, and add comprehensive event logging for monitoring and debugging.",
+            "dependencies": [
+              3
+            ],
+            "details": "Implement Smart Account integration: 1) Add function to register YieldAutomator as authorized module/delegate on user's Smart Account, 2) Create registerUser function that stores user's Smart Account address and current strategy, 3) Add mapping(address => UserConfig) to track user configurations, 4) Implement events: UpkeepRegistered(address user, uint256 strategyId), Rebalanced(address user, uint256 fromStrategy, uint256 toStrategy, uint256 amount), APYUpdated(uint256 strategyId, uint256 newAPY, uint256 timestamp), RebalanceThresholdUpdated(uint256 newThreshold), 5) Add getter functions for user configurations and current APY data.",
+            "status": "pending",
+            "testStrategy": "Test Smart Account integration: 1) Deploy mock Smart Account and verify YieldAutomator can be registered as module, 2) Test registerUser function stores correct configuration, 3) Verify all events emit with correct parameters during operations, 4) Test getter functions return accurate data, 5) Verify YieldAutomator can execute dock/ship on behalf of registered users, 6) Monitor event logs during full rebalancing flow.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 5,
+            "title": "Deploy contract and register Upkeep on Chainlink Automation",
+            "description": "Deploy YieldAutomator contract to Base Sepolia testnet, verify on Basescan, and register the Upkeep on Chainlink Automation UI with appropriate funding and configuration.",
+            "dependencies": [
+              4
+            ],
+            "details": "Deployment and registration: 1) Create Foundry deployment script with constructor parameters (Aqua contract address, forwarder address, initial thresholds), 2) Deploy to Base Sepolia using forge script with private key, 3) Verify contract on Basescan using forge verify-contract, 4) Navigate to Chainlink Automation UI (automation.chain.link), 5) Register new Custom Logic Upkeep with YieldAutomator address, 6) Fund Upkeep with LINK tokens (minimum 5 LINK recommended), 7) Configure gas limit (500k recommended), 8) Set check frequency and trigger conditions, 9) Document Upkeep ID and configuration in project README.",
+            "status": "pending",
+            "testStrategy": "End-to-end deployment testing: 1) Verify contract deployment transaction succeeded on Base Sepolia, 2) Confirm contract verification on Basescan shows correct source code, 3) Test checkUpkeep call directly using cast to verify it returns expected values, 4) Verify Upkeep registration appears in Chainlink Automation dashboard, 5) Simulate APY change by calling test function and monitor Automation dashboard for automatic execution, 6) Check execution logs and verify performUpkeep was called successfully, 7) Verify funds were rebalanced correctly by checking Aqua contract balances.",
+            "parentId": "undefined"
+          }
+        ]
+      },
+      {
+        "id": "9",
+        "title": "Integrate EIL SDK for Cross-Chain Deposit Intent Handling",
+        "description": "Implement the Ethereum Interoperability Layer (EIL) SDK to enable users to deposit USDC from multiple Layer 2 networks without manual bridging.",
+        "details": "1. Install EIL SDK (check latest package name from EIL documentation):\n   ```bash\n   pnpm add @ethereum-interoperability-layer/sdk\n   ```\n2. Create EIL service `lib/eil.ts`:\n   ```typescript\n   import { EILClient } from '@ethereum-interoperability-layer/sdk';\n   \n   export async function createDepositIntent(sourceChain, targetChain, amount, recipient) {\n     const eil = new EILClient({\n       sourceChainId: sourceChain,\n       targetChainId: targetChain\n     });\n     \n     // Create cross-chain intent\n     const intent = await eil.createIntent({\n       token: USDC_ADDRESS,\n       amount,\n       recipient,\n       targetAction: 'deposit' // Custom action for Aqua deposit\n     });\n     \n     return intent;\n   }\n   ```\n3. Add chain selector to deposit form:\n   - Detect user's current chain\n   - Show supported chains (Base, Arbitrum, Optimism)\n   - Allow manual chain selection\n4. Implement intent execution flow:\n   ```typescript\n   async function executeDepositIntent(intent) {\n     const tx = await eil.executeIntent(intent);\n     // Monitor cross-chain status\n     const status = await eil.waitForCompletion(tx.hash);\n     return status;\n   }\n   ```\n5. Add cross-chain transaction status tracking UI.\n6. Implement fallback to single-chain if EIL fails.",
+        "testStrategy": "1. Test deposit from Base to Base (same chain, should skip bridging).\n2. Test cross-chain deposit from Arbitrum Sepolia to Base Sepolia.\n3. Verify USDC arrives in Smart Account on target chain.\n4. Test intent status tracking and UI updates.\n5. Test error handling for unsupported chains.\n6. Verify gas estimation for cross-chain transactions.",
+        "priority": "medium",
+        "dependencies": [
+          "4"
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Install EIL SDK and Configure Dependencies",
+            "description": "Install the Ethereum Interoperability Layer SDK package and verify it's properly configured in the monorepo workspace.",
+            "dependencies": [],
+            "details": "Run `pnpm add @ethereum-interoperability-layer/sdk` in the apps/web directory. Verify the package is added to package.json and pnpm-lock.yaml is updated. Check EIL documentation for any peer dependencies or additional configuration requirements. Ensure TypeScript types are available.",
+            "status": "pending",
+            "testStrategy": "Verify package installation with `pnpm list @ethereum-interoperability-layer/sdk`. Check that TypeScript can resolve EIL imports without errors. Run `pnpm build` to ensure no compilation errors.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Create EIL Service Module with Intent Creation Logic",
+            "description": "Implement the core EIL service in lib/eil.ts with functions to create and manage cross-chain deposit intents.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create lib/eil.ts file with EILClient initialization. Implement createDepositIntent function that accepts sourceChain, targetChain, amount, and recipient parameters. Configure USDC token addresses for supported chains (Base, Arbitrum, Optimism). Add proper error handling and TypeScript types. Include intent execution function executeDepositIntent with status monitoring using eil.waitForCompletion.",
+            "status": "pending",
+            "testStrategy": "Unit test createDepositIntent with mock EILClient. Test with different chain combinations (Base-Base, Arbitrum-Base, Optimism-Base). Verify intent object structure matches expected format. Test error handling for invalid parameters.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Add Chain Selector UI to Deposit Form",
+            "description": "Extend the deposit form component to include chain detection and selection UI for cross-chain deposits.",
+            "dependencies": [
+              2
+            ],
+            "details": "Add chain detection logic to automatically identify user's current connected chain. Create dropdown/selector component showing supported chains (Base, Arbitrum, Optimism) with chain logos and names. Display current chain as default selection. Add visual indicators for same-chain vs cross-chain deposits. Integrate with existing deposit form validation to ensure chain compatibility.",
+            "status": "pending",
+            "testStrategy": "Test chain auto-detection by switching networks in wallet. Verify all supported chains appear in selector. Test UI updates when selecting different chains. Verify same-chain deposits show appropriate messaging. Test responsive design on mobile devices.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Implement Cross-Chain Intent Execution Flow",
+            "description": "Build the complete intent execution workflow that handles cross-chain deposit transactions and monitors their completion status.",
+            "dependencies": [
+              3
+            ],
+            "details": "Integrate createDepositIntent and executeDepositIntent into deposit form submission handler. Add transaction signing flow with user's wallet. Implement status polling mechanism using eil.waitForCompletion to track cross-chain transaction progress. Handle different transaction states (pending, bridging, completed, failed). Add proper error handling and user notifications for each state. Store intent transaction hashes for status tracking.",
+            "status": "pending",
+            "testStrategy": "Test deposit from Base to Base (same chain, should skip bridging). Test cross-chain deposit from Arbitrum Sepolia to Base Sepolia. Verify transaction status updates correctly through all stages. Test timeout scenarios and error handling. Verify USDC arrives in Smart Account on target chain.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 5,
+            "title": "Build Cross-Chain Status Tracking UI with Fallback Handling",
+            "description": "Create UI components to display cross-chain transaction status and implement fallback mechanism for EIL failures.",
+            "dependencies": [
+              4
+            ],
+            "details": "Create status tracking component showing transaction progress (initiated, bridging, confirming, completed). Display transaction hashes with block explorer links for both source and target chains. Add estimated completion time indicator. Implement fallback logic to detect EIL failures and offer single-chain deposit option. Add retry mechanism for failed intents. Show clear error messages with actionable next steps for users.",
+            "status": "pending",
+            "testStrategy": "Test status UI updates during actual cross-chain transaction. Verify block explorer links work correctly for all supported chains. Test fallback activation by simulating EIL service failure. Verify error messages are user-friendly and actionable. Test retry functionality for failed transactions.",
+            "parentId": "undefined"
+          }
+        ]
+      },
+      {
+        "id": "10",
+        "title": "UI Polish, Error Handling, and Demo Preparation",
+        "description": "Add animations, loading states, comprehensive error handling, and prepare demo video and documentation for hackathon submission.",
+        "details": "1. Implement animations using Framer Motion:\n   ```bash\n   pnpm add framer-motion\n   ```\n   - Add page transitions\n   - Animate balance updates\n   - Add micro-interactions for buttons\n2. Enhance loading states:\n   - Skeleton loaders for dashboard cards\n   - Transaction pending indicators\n   - Optimistic UI updates with rollback on error\n3. Comprehensive error handling:\n   ```typescript\n   try {\n     await shipToAqua(...);\n   } catch (error) {\n     if (error.code === 'INSUFFICIENT_FUNDS') {\n       toast.error('Insufficient USDC balance');\n     } else if (error.code === 'USER_REJECTED') {\n       toast.info('Transaction cancelled');\n     } else {\n       toast.error('Transaction failed. Please try again.');\n     }\n   }\n   ```\n4. Add toast notifications using `react-hot-toast`.\n5. Implement transaction history view (optional).\n6. Create demo video script:\n   - Show onboarding with passkey\n   - Demonstrate deposit flow\n   - Show dashboard with real-time updates\n   - Demonstrate automated rebalancing (time-lapse if needed)\n7. Write README with:\n   - Architecture overview\n   - Setup instructions\n   - Demo credentials\n   - Technology stack\n8. Deploy to Vercel with environment variables configured.\n9. Test full user journey end-to-end on mobile device.",
+        "testStrategy": "1. Perform full user journey testing on iOS Safari and Chrome Android.\n2. Test all error scenarios and verify appropriate messages.\n3. Verify animations are smooth and not janky on mobile.\n4. Test PWA installation and offline behavior.\n5. Record demo video and verify all features are showcased.\n6. Have external tester follow README to verify setup instructions.\n7. Load test with multiple concurrent users (if time permits).",
+        "priority": "low",
+        "dependencies": [
+          "5",
+          "6",
+          "8",
+          "9"
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement animations and micro-interactions using Framer Motion",
+            "description": "Install Framer Motion and add page transitions, balance update animations, and button micro-interactions for enhanced user experience.",
+            "dependencies": [],
+            "details": "Install framer-motion via pnpm. Create animation variants for page transitions in layout components. Implement AnimatePresence for route changes. Add motion components for balance cards with spring animations on value updates. Create hover and tap animations for all interactive buttons. Ensure animations are performant on mobile devices with reduced motion preferences respected.",
+            "status": "pending",
+            "testStrategy": "Test animations on iOS Safari and Chrome Android for smoothness. Verify no jank or performance issues. Test with reduced motion settings enabled. Confirm animations enhance UX without being distracting.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Enhance loading states with skeleton loaders and optimistic UI",
+            "description": "Implement skeleton loaders for dashboard cards, transaction pending indicators, and optimistic UI updates with error rollback functionality.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create reusable skeleton loader components for dashboard cards, balance displays, and transaction lists. Implement transaction pending indicators with animated spinners. Add optimistic UI updates that immediately reflect user actions (deposits, withdrawals) before blockchain confirmation. Implement rollback mechanism that reverts optimistic updates if transactions fail. Use React state management to track pending operations.",
+            "status": "pending",
+            "testStrategy": "Test loading states by throttling network in DevTools. Verify skeleton loaders appear during data fetching. Test optimistic updates by initiating transactions and confirming immediate UI feedback. Simulate transaction failures to verify rollback works correctly.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Implement comprehensive error handling with toast notifications",
+            "description": "Add react-hot-toast for notifications and implement comprehensive error handling for all transaction types with user-friendly messages.",
+            "dependencies": [
+              2
+            ],
+            "details": "Install react-hot-toast via pnpm. Create toast provider wrapper in app layout. Implement error handling for all transaction flows (deposit, withdrawal, rebalancing) with specific error codes: INSUFFICIENT_FUNDS, USER_REJECTED, NETWORK_ERROR, CONTRACT_ERROR. Add success toasts for completed transactions. Create custom toast styles matching app theme. Handle edge cases like wallet disconnection and network switches.",
+            "status": "pending",
+            "testStrategy": "Test all error scenarios: insufficient balance, user rejection, network failures. Verify appropriate toast messages appear. Test success notifications for completed transactions. Ensure toasts are accessible and dismissible on mobile.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Create demo video and comprehensive README documentation",
+            "description": "Record demo video showcasing full user journey and write detailed README with architecture overview, setup instructions, and technology stack.",
+            "dependencies": [
+              3
+            ],
+            "details": "Write demo video script covering: passkey onboarding, deposit flow, dashboard with real-time updates, and automated rebalancing (time-lapse if needed). Record high-quality screen capture on mobile device. Edit video to 2-3 minutes highlighting key features. Write README.md with: project overview, architecture diagram, technology stack breakdown, local setup instructions, environment variables guide, demo credentials for testing, deployment instructions, and troubleshooting section.",
+            "status": "pending",
+            "testStrategy": "Review demo video for clarity and completeness. Verify README instructions by following setup steps on fresh machine. Test demo credentials work correctly. Ensure all links and references are valid.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 5,
+            "title": "Deploy to Vercel and perform end-to-end testing on mobile",
+            "description": "Deploy application to Vercel with proper environment configuration and conduct comprehensive end-to-end testing on mobile devices.",
+            "dependencies": [
+              4
+            ],
+            "details": "Configure Vercel project with environment variables: NEXT_PUBLIC_PRIVY_APP_ID, NEXT_PUBLIC_ALCHEMY_API_KEY, contract addresses, etc. Set up production build optimizations. Deploy to Vercel and verify deployment succeeds. Test full user journey on iOS Safari and Chrome Android: passkey creation, Smart Account provisioning, deposit flow, dashboard updates, transaction history, error scenarios, PWA installation, and offline behavior. Document any issues found and verify fixes.",
+            "status": "pending",
+            "testStrategy": "Perform complete user journey testing on multiple mobile devices and browsers. Test PWA installation and offline capabilities. Verify all environment variables are correctly configured. Test error scenarios in production environment. Confirm analytics and monitoring are working. Validate performance metrics meet targets.",
+            "parentId": "undefined"
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "version": "1.0.0",
+      "lastModified": "2025-11-22T06:40:38.867Z",
+      "taskCount": 10,
+      "completedCount": 3,
+      "tags": [
+        "master"
+      ]
+    }
+  }
+}

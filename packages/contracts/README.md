@@ -58,15 +58,18 @@ pnpm deploy:base
 ## Contract Addresses
 
 ### Base Sepolia
+
 - YieldAutomator: TBD
 - Chainlink Functions Router: `0xf9B8fc078197181C841c296C876945aaa425B278`
 
 ### Base Mainnet
+
 - YieldAutomator: TBD
 
 ## Architecture
 
 The YieldAutomator contract:
+
 1. Uses Chainlink Automation to check if users need rebalancing
 2. Uses Chainlink Functions to fetch real-time APY data from Aqua strategies
 3. Automatically executes `dock` and `ship` operations on Aqua Protocol
@@ -75,6 +78,7 @@ The YieldAutomator contract:
 ## Development
 
 Format code:
+
 ```bash
 forge fmt
 # or
@@ -82,6 +86,7 @@ pnpm fmt
 ```
 
 Clean build artifacts:
+
 ```bash
 forge clean
 # or
