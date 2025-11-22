@@ -1,0 +1,138 @@
+---
+description: Never use mock data - always integrate with real APIs, contracts, and data sources
+globs: **/*.ts, **/*.tsx, **/*.sol, **/*.js
+alwaysApply: true
+---
+
+# No Mock Data Policy
+
+**Critical Rule: This application must NEVER use mock, placeholder, or hardcoded data.**
+
+## ✅ DO: Use Real Data Sources
+
+- **Smart Contracts**: Always call actual deployed contracts
+- **APIs**: Integrate with real APIs (Chainlink, Aqua, etc.)
+- **Blockchain Data**: Read from actual on-chain state
+- **User Balances**: Query real token balances from contracts
+- **APY Data**: Fetch from Chainlink Functions or real DeFi protocols
+- **Transaction Data**: Use actual transaction receipts and events
+
+## ❌ DON'T: Use Mock Data
+
+```typescript
+// ❌ NEVER DO THIS
+const mockAPY = 8.5;
+const mockBalance = 1000;
+const mockStrategies = [
+  { id: 1, apy: 8.5 },
+  { id: 2, apy: 12.3 }
+];
+
+// ✅ DO THIS INSTEAD
+const apy = await fetchAPYFromChainlink(strategyId);
+const balance = await aquaContract.read.balanceOf([userAddress, strategyHash]);
+const strategies = await yieldAutomator.read.getActiveStrategies();
+```
+
+## 🔧 Acceptable Temporary States
+
+The ONLY acceptable temporary states are:
+
+1. **Loading States**: While fetching real data
+   ```typescript
+   const { data: balance, isLoading } = useBalance();
+   if (isLoading) return <Skeleton />;
+   return <div>{balance}</div>;
+   ```
+
+2. **Error States**: When real data fetch fails
+   ```typescript
+   if (error) return <ErrorMessage error={error} />;
+   ```
+
+3. **Empty States**: When no real data exists yet
+   ```typescript
+   if (!strategies.length) return <EmptyState />;
+   ```
+
+## 🚫 Prohibited Patterns
+
+- Hardcoded APY percentages
+- Fake transaction hashes
+- Placeholder addresses (except for TODOs that must be replaced)
+- Mock API responses
+- Simulated blockchain data
+- Hardcoded token balances
+- Fake user data
+
+## 🎯 Development Strategy
+
+If a real integration isn't ready yet:
+
+1. **Build the integration first** - Don't build UI with mock data
+2. **Use testnet contracts** - Deploy real contracts to testnets
+3. **Use real APIs** - Even if they return empty data initially
+4. **Show loading states** - Better than showing fake data
+
+## 📝 Code Review Checklist
+
+Before committing, verify:
+- [ ] No hardcoded numeric values for balances/APY
+- [ ] All contract calls use real addresses
+- [ ] All API calls hit real endpoints
+- [ ] No `const mock*` variables
+- [ ] No `// TODO: Replace with real data` without immediate action
+
+## 🔍 Examples
+
+### ❌ Bad: Mock APY Display
+```typescript
+function APYCard() {
+  const apy = 8.5; // ❌ Hardcoded
+  return <div>Current APY: {apy}%</div>;
+}
+```
+
+### ✅ Good: Real APY from Chainlink
+```typescript
+function APYCard({ strategyId }: { strategyId: string }) {
+  const { data: apy, isLoading } = useStrategyAPY(strategyId);
+  
+  if (isLoading) return <Skeleton />;
+  if (!apy) return <ErrorState />;
+  
+  return <div>Current APY: {apy}%</div>;
+}
+```
+
+### ❌ Bad: Mock Balance
+```typescript
+const balance = 1000; // ❌ Fake balance
+```
+
+### ✅ Good: Real Balance from Aqua
+```typescript
+const { data: balance } = useReadContract({
+  address: AQUA_CONTRACT,
+  abi: aquaAbi,
+  functionName: 'rawBalances',
+  args: [userAddress, appAddress, strategyHash, tokenAddress],
+});
+```
+
+## 🎓 Philosophy
+
+**"If it's not real, it's not ready."**
+
+Mock data creates false confidence and hides integration issues. Build the real thing from the start, even if it means showing loading states or empty states initially.
+
+## 🚨 Enforcement
+
+Any PR or commit containing mock data will be rejected unless:
+1. It's explicitly marked as a temporary placeholder
+2. There's a linked issue to replace it with real data
+3. It's replaced within the same work session
+
+---
+
+**Remember: We're building a real product, not a prototype. Every piece of data must be real.**
