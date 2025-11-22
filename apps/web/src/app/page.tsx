@@ -19,7 +19,7 @@ export default function Home() {
       <main className="flex min-h-screen w-full flex-col items-center justify-center px-6 sm:px-8">
         <div className="flex flex-col items-center gap-8 text-center max-w-2xl">
           <h1 className="text-5xl sm:text-6xl font-bold tracking-tight">
-            🥥 Coco Butter
+            🥥 Coco
           </h1>
           <p className="text-xl sm:text-2xl text-muted-foreground">
             High-yield stablecoin savings. Any chain. Zero complexity.

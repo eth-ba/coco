@@ -2,7 +2,7 @@
   "name": "coco-butter-monorepo",
   "version": "0.1.0",
   "private": true,
-  "description": "Coco Butter - Chain-abstracted high-yield stablecoin savings platform",
+  "description": "Coco - Chain-abstracted high-yield stablecoin savings platform",
   "scripts": {
     "dev": "pnpm --filter @coco/web dev",
     "build": "pnpm -r build",

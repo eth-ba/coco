@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Coco Butter - High-Yield Stablecoin Savings",
+  title: "Coco - High-Yield Stablecoin Savings",
   description: "The simplest way to earn high yields on your stablecoins across any chain",
 };
 
