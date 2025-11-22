@@ -14,3 +14,10 @@ export const BASE_SEPOLIA_CHAIN_ID = 84532;
 // Strategy indices
 export const SIMPLE_VAULT_STRATEGY = 0; // SimpleAquaApp strategy index
 
+// Re-export Aqua utilities
+export { 
+  buildDockTransaction, 
+  calculateStrategyHash,
+  type AquaStrategy 
+} from './aqua';
+

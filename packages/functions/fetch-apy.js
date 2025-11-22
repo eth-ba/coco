@@ -2,17 +2,20 @@
  * Chainlink Functions Script: Fetch APY Data for Aqua Strategies
  * 
  * This script fetches real-time APY data for different DeFi yield strategies
- * and returns them to the YieldAutomator contract.
+ * and returns the best APY to the YieldAutomator contract.
  * 
- * Data Sources:
- * - DeFiLlama API for protocol yields
- * - Aqua Protocol API (if available)
- * - Individual protocol APIs (Aave, Compound, etc.)
+ * Arguments:
+ * - args[0]: Strategy type (e.g., "aave", "compound", "all")
+ * - args[1]: Chain (e.g., "base", "arbitrum")
+ * - args[2]: Asset (e.g., "USDC")
+ * 
+ * Returns: uint256 APY in basis points (e.g., 850 = 8.50%)
  */
 
-// Strategy addresses passed as arguments
-// args[0] = comma-separated list of strategy identifiers
-const strategyIds = args[0] ? args[0].split(',') : [];
+// Parse arguments
+const strategyType = args[0] || 'all';
+const chain = args[1] || 'base';
+const asset = args[2] || 'USDC';
 
 // Helper function to fetch APY from DeFiLlama
 async function fetchDeFiLlamaAPY(protocol, chain, pool) {
@@ -117,42 +120,55 @@ async function fetchCompoundAPY(chain, asset) {
 }
 
 // Main execution
-async function main() {
-  const apyResults = [];
-  
-  // Define strategies to fetch
-  // In production, these would be passed as arguments or configured
-  const strategies = [
-    { type: 'aave', chain: 'base', asset: 'USDC' },
-    { type: 'compound', chain: 'base', asset: 'USDC' },
-    { type: 'defillama', protocol: 'aave-v3', chain: 'Base', pool: 'USDC' }
+const apyResults = [];
+
+// Determine which strategies to fetch based on strategyType
+let strategiesToFetch = [];
+
+if (strategyType === 'all') {
+  strategiesToFetch = [
+    { type: 'aave', chain, asset },
+    { type: 'compound', chain, asset },
+    { type: 'defillama', protocol: 'aave-v3', chain: chain.charAt(0).toUpperCase() + chain.slice(1), pool: asset }
   ];
-  
-  // Fetch APY for each strategy
-  for (const strategy of strategies) {
-    let apy = null;
-    
-    switch (strategy.type) {
-      case 'aave':
-        apy = await fetchAaveAPY(strategy.chain, strategy.asset);
-        break;
-      case 'compound':
-        apy = await fetchCompoundAPY(strategy.chain, strategy.asset);
-        break;
-      case 'defillama':
-        apy = await fetchDeFiLlamaAPY(strategy.protocol, strategy.chain, strategy.pool);
-        break;
-    }
-    
-    // If fetch failed, use a fallback/default value
-    // In production, you might want to keep the last known value instead
-    apyResults.push(apy || 0);
-  }
-  
-  // Return encoded array of APY values
-  return Functions.encodeUint256(apyResults);
+} else {
+  strategiesToFetch = [{ type: strategyType, chain, asset }];
 }
 
-// Execute and return result
-return await main();
+// Fetch APY for each strategy
+for (const strategy of strategiesToFetch) {
+  let apy = null;
+  
+  switch (strategy.type) {
+    case 'aave':
+      apy = await fetchAaveAPY(strategy.chain, strategy.asset);
+      break;
+    case 'compound':
+      apy = await fetchCompoundAPY(strategy.chain, strategy.asset);
+      break;
+    case 'defillama':
+      apy = await fetchDeFiLlamaAPY(strategy.protocol, strategy.chain, strategy.pool);
+      break;
+  }
+  
+  // If fetch succeeded, add to results
+  if (apy !== null && apy > 0) {
+    apyResults.push(apy);
+  }
+}
+
+// If no results, return a default safe APY (5%)
+if (apyResults.length === 0) {
+  console.log('No APY data fetched, returning default 5%');
+  return Functions.encodeUint256(500); // 500 basis points = 5%
+}
+
+// Find the best (highest) APY
+const bestAPY = Math.max(...apyResults);
+
+console.log(`Best APY found: ${bestAPY / 100}%`);
+
+// Return the best APY in basis points
+// Functions.encodeUint256() is the proper Chainlink Functions method
+return Functions.encodeUint256(bestAPY);
 

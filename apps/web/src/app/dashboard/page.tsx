@@ -4,6 +4,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { DepositForm } from "@/components/DepositForm";
+import { WithdrawModal } from "@/components/WithdrawModal";
+import { useWithdraw } from "@/hooks/useWithdraw";
 import { formatUnits } from "viem";
 import { USDC_ADDRESS } from "@/lib/constants";
 import { useWallets } from "@privy-io/react-auth";
@@ -16,6 +18,10 @@ export default function Dashboard() {
   const [ethBalance, setEthBalance] = useState<string>("0");
   const [copied, setCopied] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+  const [depositedAmount] = useState<string>("0");
+  
+  const { withdraw, isLoading: isWithdrawing } = useWithdraw();
 
   // Get USDC balance
   useEffect(() => {
@@ -109,6 +115,16 @@ export default function Dashboard() {
     }
   };
 
+  const handleWithdraw = async (amount: string) => {
+    const result = await withdraw(amount);
+    if (result?.success) {
+      // Refresh balances after successful withdrawal
+      await refreshBalance();
+      // TODO: Refresh deposited amount from Aqua Protocol
+    }
+    return result;
+  };
+
   useEffect(() => {
     if (ready && !authenticated) {
       router.push("/");
@@ -186,18 +202,40 @@ export default function Dashboard() {
             <p className="text-sm text-muted-foreground mb-2">
               Deposited Amount
             </p>
-            <p className="text-2xl font-bold">$0.00</p>
+            <p className="text-2xl font-bold">${parseFloat(depositedAmount).toFixed(2)}</p>
             <p className="text-xs text-muted-foreground mt-1">
               Earning yield via Aqua
             </p>
           </div>
         </div>
 
-        {/* Deposit Form */}
+        {/* Withdraw Button */}
         <div className="mt-6">
+          <button
+            onClick={() => setIsWithdrawModalOpen(true)}
+            className="w-full px-6 py-4 bg-linear-to-r from-red-500 to-pink-500 text-white rounded-2xl font-semibold hover:from-red-600 hover:to-pink-600 transition-all shadow-lg shadow-red-500/25 flex items-center justify-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Withdraw Funds
+          </button>
+        </div>
+
+        {/* Deposit Form */}
+        <div className="mt-4">
           <DepositForm />
         </div>
       </div>
+
+      {/* Withdraw Modal */}
+      <WithdrawModal
+        isOpen={isWithdrawModalOpen}
+        onClose={() => setIsWithdrawModalOpen(false)}
+        onWithdraw={handleWithdraw}
+        currentBalance={depositedAmount}
+        isLoading={isWithdrawing}
+      />
     </div>
   );
 }

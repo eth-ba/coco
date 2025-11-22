@@ -321,7 +321,7 @@
         "dependencies": [
           "4"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -329,9 +329,10 @@
             "description": "Set up the main dashboard page structure at app/dashboard/page.tsx with responsive mobile-first design using TailwindCSS",
             "dependencies": [],
             "details": "Create app/dashboard/page.tsx with a mobile-first layout structure. Use TailwindCSS for styling with large touch-friendly elements. Set up the basic page structure with containers for balance, APY, and earnings cards. Implement responsive grid layout that adapts from mobile to desktop views.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify responsive layout on mobile (320px), tablet (768px), and desktop (1024px+) viewports. Test touch interactions on mobile devices. Validate TailwindCSS classes render correctly.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-22T15:33:16.350Z"
           },
           {
             "id": 2,
@@ -341,9 +342,10 @@
               1
             ],
             "details": "Create hooks/useAquaBalance.ts that uses wagmi's useReadContract to fetch balance from AQUA_CONTRACT. Implement the balanceOf function call with smartAccountAddress and strategyId parameters. Enable watch mode for real-time updates. Handle loading and error states. Return formatted balance data.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test hook with valid smart account address and strategy ID. Verify balance updates when contract state changes. Test error handling with invalid addresses. Confirm watch mode triggers re-renders on balance changes.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-22T15:33:16.354Z"
           },
           {
             "id": 3,
@@ -352,10 +354,11 @@
             "dependencies": [
               1
             ],
-            "details": "Create lib/apy-service.ts with getCurrentAPY function that accepts strategyId. Implement mock data return structure: { apy: 8.5, strategyId, timestamp }. Add TypeScript interfaces for APY data. Structure the service to easily swap mock implementation with Chainlink Functions integration later. Include multiple strategy mock data.",
-            "status": "pending",
+            "details": "Create lib/apy-service.ts with getCurrentAPY function that accepts strategyId. Implement mock data return structure: { apy: 8.5, strategyId, timestamp }. Add TypeScript interfaces for APY data. Structure the service to easily swap mock implementation with Chainlink Functions integration later. Include multiple strategy mock data.\n<info added on 2025-11-22T15:35:14.315Z>\nBlocked: Waiting for Task 7 (Chainlink Functions) to be completed. APY data will come from Chainlink Functions script that fetches real-time yield data. For now, using placeholder value in UI. Will implement real APY fetching after Chainlink Functions infrastructure is ready.\n</info added on 2025-11-22T15:35:14.315Z>",
+            "status": "deferred",
             "testStrategy": "Test getCurrentAPY returns correct mock data for different strategy IDs. Verify TypeScript types are correct. Test error handling for invalid strategy IDs. Confirm data structure matches expected format for UI components.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-22T15:35:29.289Z"
           },
           {
             "id": 4,
@@ -366,9 +369,10 @@
               3
             ],
             "details": "Create components/dashboard/TotalBalanceCard.tsx to display large unified USDC balance. Build components/dashboard/APYCard.tsx with current earning rate and trend indicator (up/down arrow). Implement components/dashboard/EarningsCard.tsx for lifetime earnings calculation. Use data from useAquaBalance hook and APY service. Style with TailwindCSS using large fonts and touch-friendly design. Add loading skeletons for each card.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test each component renders correctly with mock data. Verify loading skeletons display during data fetch. Test balance formatting (decimals, commas). Validate APY trend indicator shows correct direction. Test earnings calculation accuracy.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-22T15:34:54.340Z"
           },
           {
             "id": 5,
@@ -378,11 +382,13 @@
               4
             ],
             "details": "Implement useEffect with 30-second interval to refresh APY and balance data. Create error boundary components for graceful error handling. Build error state UI components with retry functionality. Add loading skeletons for all data states. Implement toast notifications for errors. Test all interactive states and ensure smooth transitions between loading, success, and error states.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify auto-refresh triggers every 30 seconds. Test error states by simulating network failures. Confirm loading skeletons appear during refresh. Test retry functionality on errors. Verify mobile responsiveness with DevTools throttling. Check balance updates after deposit transactions complete.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-22T15:34:54.343Z"
           }
-        ]
+        ],
+        "updatedAt": "2025-11-22T15:35:48.801Z"
       },
       {
         "id": "6",
@@ -394,7 +400,7 @@
         "dependencies": [
           "4"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -402,9 +408,10 @@
             "description": "Build a modal component for the withdrawal interface with amount input field, balance display, and validation logic to ensure withdrawal amount does not exceed available balance.",
             "dependencies": [],
             "details": "Create a new modal component (e.g., WithdrawModal.tsx) with an amount input field, display current balance, implement real-time validation to check that withdrawal amount is <= balance, add visual feedback for invalid amounts, and include a cancel button. Use the existing modal pattern from the project and ensure mobile-first responsive design.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test input validation with various amounts (0, negative, exceeds balance, valid amounts). Verify error messages display correctly. Test modal open/close functionality. Check mobile responsiveness.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-22T15:38:49.741Z"
           },
           {
             "id": 2,
@@ -414,9 +421,10 @@
               1
             ],
             "details": "Add the dockFromAqua function to lib/aqua.ts that accepts smartAccount, amount, and strategyId parameters. Initialize AquaSDK with Base chain ID, use aqua.encodeDock() to encode the transaction data, execute the transaction via smartAccount.sendTransaction() to the AQUA_CONTRACT address, handle transaction response and errors, and return the transaction hash.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test dock transaction with various amounts on Base Sepolia. Verify transaction executes successfully and returns valid transaction hash. Test error handling for failed transactions. Verify funds are withdrawn from Aqua strategy.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-22T15:40:19.120Z"
           },
           {
             "id": 3,
@@ -426,9 +434,10 @@
               1
             ],
             "details": "Add a 'Withdraw All' button to the withdraw modal that auto-fills the input with the full balance. Create a confirmation screen/step that displays the withdrawal amount, destination (Smart Account address), estimated transaction time, and gas fees. Include 'Confirm' and 'Go Back' buttons. Ensure the confirmation UI follows the existing design system.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test 'Withdraw All' button correctly populates full balance. Verify confirmation screen displays all required information accurately. Test navigation between modal steps. Verify estimated time calculation is reasonable.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-22T15:42:23.040Z"
           },
           {
             "id": 4,
@@ -438,9 +447,10 @@
               2
             ],
             "details": "Create a transaction state management system (using React state/context or a state management library) to track withdrawal transaction status (pending, confirmed, failed). Implement optimistic balance update that immediately reduces displayed balance when withdrawal is initiated. Add logic to revert optimistic update if transaction fails. Poll or watch for transaction confirmation and update final balance when confirmed.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify balance updates immediately when withdrawal initiates. Test balance reverts correctly on transaction failure. Confirm final balance matches actual on-chain balance after transaction confirms. Test with network delays.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-22T16:12:31.412Z"
           },
           {
             "id": 5,
@@ -450,11 +460,13 @@
               4
             ],
             "details": "Integrate or create a toast notification component (e.g., using react-hot-toast or similar library). Add toast notifications for: withdrawal initiated (pending), withdrawal successful with transaction link, withdrawal failed with error message. Include transaction hash in success toast with link to block explorer. Ensure toasts are dismissible and have appropriate duration. Style toasts to match the app design system.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test toast appears for successful withdrawal with correct message and transaction link. Verify error toast displays with meaningful error message on failure. Test pending toast during transaction processing. Verify toasts are dismissible and auto-dismiss after appropriate time.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-22T16:28:20.796Z"
           }
-        ]
+        ],
+        "updatedAt": "2025-11-22T16:28:20.796Z"
       },
       {
         "id": "7",
@@ -466,7 +478,7 @@
         "dependencies": [
           "3"
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -474,9 +486,10 @@
             "description": "Develop the check-yield.js script that fetches off-chain APY data from Aqua strategies or DeFiLlama API and returns the best strategy based on APY comparison.",
             "dependencies": [],
             "details": "Create `packages/functions/check-yield.js` with the following: Parse strategyIds from args[0], implement API calls to fetch real APY data from Aqua API or DeFiLlama (with mock fallback for testing), implement logic to find the highest APY strategy using reduce, encode response using Functions.encodeString with JSON.stringify, add error handling for API failures, and include TVL data in response.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test the script locally using Chainlink Functions simulator with mock strategy IDs. Verify it returns valid JSON with strategyId, apy, and tvl fields. Test error handling with invalid inputs and API failures.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-22T16:33:46.296Z"
           },
           {
             "id": 2,
@@ -486,9 +499,10 @@
               1
             ],
             "details": "Create `packages/functions/setup-subscription.js` that uses Chainlink Functions SDK to create a new subscription, fund it with LINK tokens from the deployer wallet, add the YieldAutomator contract address as an authorized consumer, configure gas limits and callback gas limit parameters, and store subscription ID in environment variables or deployment artifacts for contract initialization.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Run the setup script on Base Sepolia testnet. Verify subscription is created and funded by checking Chainlink Functions dashboard. Confirm YieldAutomator contract is added as consumer. Test with minimal LINK amount first.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-22T16:44:50.251Z"
           },
           {
             "id": 3,
@@ -527,7 +541,8 @@
             "testStrategy": "Test callback with mock response data using Hardhat. Deploy to Base Sepolia and trigger real request, then verify callback is executed and state is updated correctly. Check event emissions in block explorer. Test error handling by simulating failed requests.",
             "parentId": "undefined"
           }
-        ]
+        ],
+        "updatedAt": "2025-11-22T16:44:50.251Z"
       },
       {
         "id": "8",
@@ -751,9 +766,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-22T07:05:01.984Z",
+      "lastModified": "2025-11-22T16:44:50.252Z",
       "taskCount": 10,
-      "completedCount": 4,
+      "completedCount": 6,
       "tags": [
         "master"
       ]

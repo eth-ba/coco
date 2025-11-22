@@ -35,7 +35,7 @@ export default function Home() {
             <button className="flex h-14 items-center justify-center rounded-xl border-2 border-border px-8 text-lg font-semibold transition-colors hover:bg-secondary">
               Learn More
             </button>
-          </div>
+        </div>
         </div>
       </main>
     </div>

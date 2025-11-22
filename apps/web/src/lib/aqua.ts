@@ -168,5 +168,26 @@ export function buildDockTransaction(
   };
 }
 
+/**
+ * Get the rawBalances ABI for querying Aqua Protocol balances
+ */
+export const rawBalancesAbi = [
+  {
+    type: 'function',
+    name: 'rawBalances',
+    inputs: [
+      { name: 'maker', type: 'address' },
+      { name: 'app', type: 'address' },
+      { name: 'strategyHash', type: 'bytes32' },
+      { name: 'token', type: 'address' }
+    ],
+    outputs: [
+      { name: 'balance', type: 'uint248' },
+      { name: 'tokensCount', type: 'uint8' }
+    ],
+    stateMutability: 'view'
+  }
+] as const;
+
 // Export constants
 export { erc20Abi, aquaAbi };
