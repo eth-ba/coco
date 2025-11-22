@@ -1,17 +1,41 @@
 import { useState } from 'react';
-import { usePrivy, useWallets } from '@privy-io/react-auth';
-import { parseUnits } from 'viem';
+import { useWallets } from '@privy-io/react-auth';
+import { parseUnits, encodeFunctionData } from 'viem';
 import { 
-  buildShipTransaction, 
-  encodeApproveUSDC, 
-  USDC_ADDRESS 
-} from '@/lib/aqua';
+  YIELD_AUTOMATOR_ADDRESS,
+  USDC_ADDRESS,
+  SIMPLE_VAULT_STRATEGY
+} from '@/lib/constants';
 
-// Placeholder app address - will need to be replaced with actual Aqua app
-const AQUA_APP_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
+// ERC20 ABI for approve function
+const erc20Abi = [
+  {
+    name: 'approve',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'spender', type: 'address' },
+      { name: 'amount', type: 'uint256' }
+    ],
+    outputs: [{ name: '', type: 'bool' }]
+  }
+] as const;
+
+// YieldAutomator ABI for deposit function
+const yieldAutomatorAbi = [
+  {
+    name: 'deposit',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'amount', type: 'uint256' },
+      { name: 'strategyIndex', type: 'uint256' }
+    ],
+    outputs: []
+  }
+] as const;
 
 export function useDeposit() {
-  const { user } = usePrivy();
   const { wallets } = useWallets();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,54 +60,74 @@ export function useDeposit() {
     setTxHash(null);
 
     try {
+      // Get the Ethereum provider from the wallet
+      const provider = await smartAccount.getEthereumProvider();
+      
       // Parse amount to smallest unit (USDC has 6 decimals)
       const amount = parseUnits(amountUSDC, 6);
 
-      // Step 1: Approve USDC to Aqua contract
-      console.log('Step 1: Approving USDC...');
-      const approveData = encodeApproveUSDC(amount);
+      console.log('💰 Depositing', amountUSDC, 'USDC via YieldAutomator');
+      console.log('📍 YieldAutomator:', YIELD_AUTOMATOR_ADDRESS);
+      console.log('📊 Strategy:', SIMPLE_VAULT_STRATEGY);
+
+      // Step 1: Approve USDC to YieldAutomator contract
+      console.log('Step 1/2: Approving USDC to YieldAutomator...');
+      const approveData = encodeFunctionData({
+        abi: erc20Abi,
+        functionName: 'approve',
+        args: [YIELD_AUTOMATOR_ADDRESS as `0x${string}`, amount]
+      });
       
-      const approveTx = await smartAccount.sendTransaction({
-        to: USDC_ADDRESS,
-        data: approveData,
-        value: BigInt(0)
+      const approveTxHash = await provider.request({
+        method: 'eth_sendTransaction',
+        params: [{
+          from: smartAccount.address,
+          to: USDC_ADDRESS,
+          data: approveData,
+          value: '0x0'
+        }]
       });
 
-      console.log('Approval transaction sent:', approveTx);
+      console.log('✅ Approval transaction sent:', approveTxHash);
 
-      // Wait a bit for approval to be mined (in production, wait for receipt)
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Wait for approval to be mined
+      await new Promise(resolve => setTimeout(resolve, 3000));
 
-      // Step 2: Ship liquidity to Aqua
-      console.log('Step 2: Shipping liquidity to Aqua...');
-      const shipTx = buildShipTransaction(
-        smartAccount.address as `0x${string}`,
-        amount,
-        AQUA_APP_ADDRESS
-      );
-
-      const shipResult = await smartAccount.sendTransaction({
-        to: shipTx.to as `0x${string}`,
-        data: shipTx.data as `0x${string}`,
-        value: shipTx.value
+      // Step 2: Call YieldAutomator.deposit()
+      console.log('Step 2/2: Calling YieldAutomator.deposit()...');
+      const depositData = encodeFunctionData({
+        abi: yieldAutomatorAbi,
+        functionName: 'deposit',
+        args: [amount, BigInt(SIMPLE_VAULT_STRATEGY)]
       });
 
-      console.log('Ship transaction sent:', shipResult);
-      console.log('Strategy hash:', shipTx.strategyHash);
+      const depositTxHash = await provider.request({
+        method: 'eth_sendTransaction',
+        params: [{
+          from: smartAccount.address,
+          to: YIELD_AUTOMATOR_ADDRESS,
+          data: depositData,
+          value: '0x0'
+        }]
+      });
 
-      setTxHash(shipResult.hash || shipResult.transactionHash || 'unknown');
+      console.log('✅ Deposit transaction sent:', depositTxHash);
+      console.log('🎉 Funds deposited to strategy', SIMPLE_VAULT_STRATEGY);
+
+      setTxHash(depositTxHash as string);
       
       return {
         success: true,
-        txHash: shipResult.hash || shipResult.transactionHash,
-        strategyHash: shipTx.strategyHash
+        txHash: depositTxHash as string,
+        strategy: SIMPLE_VAULT_STRATEGY
       };
-    } catch (err: any) {
-      console.error('Deposit error:', err);
-      setError(err.message || 'Failed to deposit. Please try again.');
+    } catch (err) {
+      console.error('❌ Deposit error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to deposit. Please try again.';
+      setError(errorMessage);
       return {
         success: false,
-        error: err.message
+        error: errorMessage
       };
     } finally {
       setIsLoading(false);
