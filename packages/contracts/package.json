@@ -1,0 +1,12 @@
+{
+  "name": "@coco/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Smart contracts for Coco Butter platform",
+  "scripts": {
+    "build": "forge build",
+    "test": "forge test",
+    "deploy": "forge script script/Deploy.s.sol"
+  }
+}
+

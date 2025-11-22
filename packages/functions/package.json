@@ -1,0 +1,11 @@
+{
+  "name": "@coco/functions",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Chainlink Functions scripts for Coco Butter platform",
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  }
+}
+

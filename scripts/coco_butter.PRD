@@ -1,0 +1,131 @@
+<context>
+# Overview
+Coco Butter is a mobile-first Progressive Web App (PWA) designed to be the simplest high-yield savings account for the DeFi ecosystem. It abstracts away the complexities of blockchains, gas fees, and bridge hopping, allowing users to deposit stablecoins (USDC) from any supported Layer 2 network and automatically earn the best available yield through the Aqua Protocol.
+
+Authentication is handled via Privy passkeys for a "web2-like" frictionless experience, creating non-custodial Smart Accounts for every user. Behind the scenes, the Ethereum Interoperability Layer (EIL) manages cross-chain liquidity, while Chainlink CRE automates yield monitoring and strategy rebalancing.
+
+The goal is to build a "set it and forget it" savings experience for the 24-hour hackathon that demonstrates the power of chain abstraction and automated DeFi operations.
+
+# Core Features
+
+## 1. Frictionless Onboarding & Wallet Management
+- **What it does**: Allows users to sign in using FaceID/TouchID (Passkeys) and automatically provisions a Smart Account (Safe/Kernel via Privy).
+- **Why it's important**: Eliminates seed phrases and complex wallet setups, dramatically lowering the barrier to entry.
+- **How it works**: Users authenticate via Privy. A deterministic Smart Account address is generated. This Smart Account holds the funds directly, maintaining non-custodial security.
+
+## 2. Chain-Abstracted Deposits (EIL)
+- **What it does**: Users can deposit USDC from any supported chain (e.g., Base, Arbitrum) without manually bridging.
+- **Why it's important**: Users shouldn't care which chain their money is on, only that it's safe and earning yield.
+- **How it works**: The frontend uses EIL SDK to detect the user's source chain and orchestrates the deposit into their Smart Account on the target yield chain (if necessary) or directly interacts with Aqua if on the same chain.
+
+## 3. Automated Yield Routing (Aqua Protocol)
+- **What it does**: Automatically deploys user funds into the highest-yielding Aqua Protocol strategies (AMM liquidity provision).
+- **Why it's important**: Maximizes returns without requiring the user to understand liquidity pools, fee tiers, or imperfect market inefficiencies.
+- **How it works**: The Smart Account "ships" (allocates) liquidity to Aqua strategies via token approvals. Funds remain in the user's Smart Account control but earn trading fees.
+
+## 4. Automated Rebalancing (Chainlink CRE)
+- **What it does**: Monitors APY across available Aqua strategies and automatically moves funds to better performing ones.
+- **Why it's important**: Yields change constantly. Automation ensures the user is always optimizing returns without manual intervention.
+- **How it works**: A `YieldAutomator.sol` contract (Chainlink Consumer) receives triggers from Chainlink Functions (which fetch off-chain APY data). If a better strategy is found, it executes a `dock` (withdraw) and `ship` (deposit) sequence on the user's Smart Account via a module/delegate permission.
+
+# User Experience
+
+## User Personas
+- **The Saver**: Wants 5-10% APY on their idle stablecoins but is terrified of "bridging" and "approving" random contracts.
+- **The Mobile User**: Wants to check their balance and earnings while on the go, expecting an app-like experience.
+
+## Key User Flows
+1.  **Onboarding**: Open App -> Click "Sign In" -> FaceID -> Dashboard.
+2.  **Deposit**: Click "Deposit" -> Enter Amount (e.g., 1000 USDC) -> Select Source Chain (if holding funds elsewhere) -> Confirm.
+3.  **Dashboard**: View "Total Balance" (unified), "Current APY", and "Lifetime Earnings".
+4.  **Withdraw**: Click "Withdraw" -> Enter Amount -> Confirm -> Receive funds in EOA or Bank (via off-ramp partner, out of scope for MVP).
+
+## UI/UX Considerations
+- **Mobile-First**: Big buttons, bottom navigation, clean typography.
+- **Abstracted Complexity**: Hide "Gas Fees", "Chain IDs", and "Transaction Hashes" unless explicitly requested.
+- **Real-time Feedback**: Optimistic UI updates for deposits and rebalancing actions.
+
+</context>
+<PRD>
+# Technical Architecture
+
+## System Components
+1.  **Frontend (PWA)**: Next.js 14 (App Router), TailwindCSS, PWA manifest.
+2.  **Auth & Wallet**: Privy SDK (Embedded Wallets + Smart Accounts).
+3.  **Smart Contracts (Foundry)**:
+    -   `YieldAutomator.sol`: Chainlink Automation Consumer contract.
+    -   *Note*: No custom Vault contract. We use the Privy Smart Account directly.
+4.  **Integrations**:
+    -   **Aqua Protocol**: Direct interaction via SDK/Contract calls (`ship`, `dock`).
+    -   **Chainlink**: Functions (for APY data) + Automation (for execution).
+    -   **EIL**: SDK for cross-chain intent handling.
+
+## Data Models
+-   **User Strategy State**: Mapped on-chain or indexed via The Graph/Subgraph (for MVP, read directly from Aqua contract `balanceOf`).
+-   **Yield Data**: Fetched off-chain via Chainlink Function (JSON: `{ strategyId: "0x...", apy: 12.5 }`).
+
+## APIs and Integrations
+-   **Privy**: `usePrivy`, `useSmartAccount`.
+-   **Aqua SDK**: `@1inch/aqua-sdk` for encoding strategy data.
+-   **Chainlink Functions**: JS script hosted on IPFS/Chainlink DON.
+
+## Infrastructure
+-   **Monorepo**: pnpm workspace (`apps/web`, `packages/contracts`, `packages/functions`).
+-   **Hosting**: Vercel (Frontend).
+-   **RPC**: Base/Arbitrum RPCs (Alchemy/Infura).
+
+# Development Roadmap
+
+## Phase 1: Foundation & Auth (Hours 0-6)
+-   Initialize Monorepo structure.
+-   Setup Next.js PWA boilerplate.
+-   Integrate Privy Auth & Smart Account creation.
+-   Verify Smart Account deployment on Testnet (Base Sepolia or Arbitrum Sepolia).
+
+## Phase 2: Aqua Integration (Hours 6-12)
+-   Install `@1inch/aqua-sdk`.
+-   Implement "One-Click Deposit" flow:
+    -   Approve USDC (Smart Account -> Aqua).
+    -   Encode `ship` transaction for a target Strategy (e.g., USDC/DAI).
+    -   Execute transaction via Smart Account.
+-   Build "Dashboard" reading virtual balances from Aqua.
+
+## Phase 3: Automation Engine (Hours 12-18)
+-   Develop `YieldAutomator.sol` (Foundry).
+-   Write Chainlink Function script (`check-yield.js`) to mock/fetch APY data.
+-   Register Upkeep on Chainlink Automation.
+-   Connect `YieldAutomator` to Smart Account (enable as module/delegate if supported, or just test standalone execution).
+
+## Phase 4: Polish & EIL (Hours 18-24)
+-   Integrate EIL SDK for cross-chain funding (if time permits, otherwise focus on single-chain perfection).
+-   UI Polish: Animations, Loading States, Error Handling.
+-   Documentation & Demo Video.
+
+# Logical Dependency Chain
+1.  **Critical Path**: Auth (Privy) -> Smart Account -> Token Approval -> Aqua `ship` Interaction.
+    -   *Why*: Without this, there is no app.
+2.  **Secondary Path**: `YieldAutomator.sol` -> Chainlink Upkeep.
+    -   *Why*: This automates the value proposition but the manual flow must work first.
+3.  **Tertiary Path**: EIL Cross-chain & Polished UI.
+    -   *Why*: "Nice to have" for a hackathon demo if the core loop works.
+
+# Risks and Mitigations
+
+## Technical Challenges
+-   **Risk**: Smart Account interaction with Aqua fails due to complex encoding.
+    -   *Mitigation*: Use standard EOA for testing first, then switch to Smart Account. Use Aqua SDK for encoding.
+-   **Risk**: Chainlink Automation runs out of gas or funds.
+    -   *Mitigation*: Fund subscription generously on testnet; keep logic simple.
+-   **Risk**: EIL integration is too complex for 24h.
+    -   *Mitigation*: Fallback to single-chain demo (Base) and "fake" the cross-chain part in the UI for the video if strictly necessary, but aim for real EIL implementation.
+
+## Resource Constraints
+-   **Constraint**: Only 24 hours.
+    -   *Mitigation*: Cut features ruthlessly. No historical charts, no complex risk scoring, no multi-strategy portfolios (1 active strategy at a time).
+
+# Appendix
+-   **Aqua Contract**: `0x499943e74fb0ce105688beee8ef2abec5d936d31`
+-   **Target Chain**: Base (fast, cheap for testing).
+-   **Tokens**: USDC, DAI (Testnet versions).
+</PRD>
+
