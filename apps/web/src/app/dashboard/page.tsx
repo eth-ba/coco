@@ -3,6 +3,7 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { DepositForm } from "@/components/DepositForm";
 
 export default function Dashboard() {
   const { authenticated, ready, smartAccountAddress, logout } = useAuth();
@@ -61,6 +62,11 @@ export default function Dashboard() {
             </p>
             <p className="text-2xl font-bold">$0.00</p>
           </div>
+        </div>
+
+        {/* Deposit Form */}
+        <div className="mt-6">
+          <DepositForm />
         </div>
       </div>
     </div>
