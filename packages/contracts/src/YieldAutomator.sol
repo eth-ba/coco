@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.20;
 
 import "@chainlink/contracts/src/v0.8/automation/AutomationCompatible.sol";
 import "@chainlink/contracts/src/v0.8/functions/v1_0_0/FunctionsClient.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./interfaces/IAqua.sol";
 
 /**
@@ -11,6 +13,8 @@ import "./interfaces/IAqua.sol";
  * @dev Integrates with Aqua Protocol for cross-chain liquidity management
  */
 contract YieldAutomator is AutomationCompatibleInterface, FunctionsClient {
+    using SafeERC20 for IERC20;
+    
     /// @notice Address of the Aqua Protocol contract
     IAqua public immutable aquaProtocol;
     
@@ -132,16 +136,10 @@ contract YieldAutomator is AutomationCompatibleInterface, FunctionsClient {
         
         // Transfer USDC from user to this contract
         // Note: User must have approved this contract first
-        (bool success, ) = usdcToken.call(
-            abi.encodeWithSignature("transferFrom(address,address,uint256)", msg.sender, address(this), amount)
-        );
-        require(success, "USDC transfer failed");
+        IERC20(usdcToken).safeTransferFrom(msg.sender, address(this), amount);
         
         // Approve Aqua Protocol to spend USDC
-        (success, ) = usdcToken.call(
-            abi.encodeWithSignature("approve(address,uint256)", address(aquaProtocol), amount)
-        );
-        require(success, "USDC approval failed");
+        IERC20(usdcToken).forceApprove(address(aquaProtocol), amount);
         
         // Ship liquidity to Aqua
         bytes32 strategyHash = aquaProtocol.ship(aquaApp, strategy, tokens, amounts);

@@ -6,6 +6,9 @@ export const AQUA_CONTRACT = '0x499943e74fb0ce105688beee8ef2abec5d936d31' as con
 // Base Sepolia USDC address
 export const USDC_ADDRESS = '0x036CbD53842c5426634e7929541eC2318f3dCF7e' as const;
 
+// YieldAutomator contract address (Base Sepolia)
+export const YIELD_AUTOMATOR_ADDRESS = '0xA802994c344d3e9635277C6bD6475ce901edbB9e' as const;
+
 // ERC20 ABI for approve function
 const erc20Abi = [
   {

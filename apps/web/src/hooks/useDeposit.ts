@@ -77,6 +77,18 @@ export function useDeposit() {
         functionName: 'approve',
         args: [YIELD_AUTOMATOR_ADDRESS as `0x${string}`, amount]
       });
+
+      // Estimate gas for approval
+      const approveGasEstimate = await provider.request({
+        method: 'eth_estimateGas',
+        params: [{
+          from: smartAccount.address,
+          to: USDC_ADDRESS,
+          data: approveData
+        }]
+      });
+
+      console.log('⛽ Approval gas estimate:', approveGasEstimate);
       
       const approveTxHash = await provider.request({
         method: 'eth_sendTransaction',
@@ -84,14 +96,45 @@ export function useDeposit() {
           from: smartAccount.address,
           to: USDC_ADDRESS,
           data: approveData,
-          value: '0x0'
+          gas: approveGasEstimate
         }]
       });
 
       console.log('✅ Approval transaction sent:', approveTxHash);
 
-      // Wait for approval to be mined
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      // Wait for approval to be mined (wait for receipt)
+      console.log('⏳ Waiting for approval to be confirmed...');
+      let approvalConfirmed = false;
+      let attempts = 0;
+      const maxAttempts = 30; // 30 seconds max wait
+      
+      while (!approvalConfirmed && attempts < maxAttempts) {
+        try {
+          const receipt = await provider.request({
+            method: 'eth_getTransactionReceipt',
+            params: [approveTxHash]
+          });
+          
+          if (receipt && receipt.status === '0x1') {
+            approvalConfirmed = true;
+            console.log('✅ Approval confirmed in block:', receipt.blockNumber);
+          } else if (receipt && receipt.status === '0x0') {
+            throw new Error('Approval transaction failed');
+          } else {
+            // Not mined yet, wait and retry
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            attempts++;
+          }
+        } catch (err) {
+          if (attempts >= maxAttempts - 1) throw err;
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          attempts++;
+        }
+      }
+      
+      if (!approvalConfirmed) {
+        throw new Error('Approval transaction timeout - please try again');
+      }
 
       // Step 2: Call YieldAutomator.deposit()
       console.log('Step 2/2: Calling YieldAutomator.deposit()...');
@@ -101,13 +144,33 @@ export function useDeposit() {
         args: [amount, BigInt(SIMPLE_VAULT_STRATEGY)]
       });
 
+      console.log('📝 Deposit transaction params:', {
+        from: smartAccount.address,
+        to: YIELD_AUTOMATOR_ADDRESS,
+        data: depositData,
+        amount: amount.toString(),
+        strategyIndex: SIMPLE_VAULT_STRATEGY
+      });
+
+      // Estimate gas for the deposit transaction
+      const gasEstimate = await provider.request({
+        method: 'eth_estimateGas',
+        params: [{
+          from: smartAccount.address,
+          to: YIELD_AUTOMATOR_ADDRESS,
+          data: depositData
+        }]
+      });
+
+      console.log('⛽ Gas estimate:', gasEstimate);
+
       const depositTxHash = await provider.request({
         method: 'eth_sendTransaction',
         params: [{
           from: smartAccount.address,
           to: YIELD_AUTOMATOR_ADDRESS,
           data: depositData,
-          value: '0x0'
+          gas: gasEstimate
         }]
       });
 
