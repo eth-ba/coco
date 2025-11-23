@@ -9,14 +9,15 @@ import {IERC3156FlashLender} from "@openzeppelin/contracts/interfaces/IERC3156Fl
 contract FlashLoan is IERC3156FlashLender {
     IAqua public immutable AQUA;
     
-    uint256 public constant FEE_BASIS_POINTS = 10;
     uint256 public constant BASIS_POINTS_DIVISOR = 100000;
+    uint256 public constant MAX_FEE_BPS = 1000; // Max 1% fee
     bytes32 public constant CALLBACK_SUCCESS = keccak256("ERC3156FlashBorrower.onFlashLoan");
     
     struct Strategy {
         address maker;
         address token;
         bytes32 salt;
+        uint256 feeBps; // Fee in basis points (e.g., 10 = 0.01%)
     }
     
     mapping(bytes32 => Strategy) public strategyData;
@@ -44,6 +45,7 @@ contract FlashLoan is IERC3156FlashLender {
     error UnsupportedToken();
     error CallbackFailed();
     error Unauthorized();
+    error FeeTooHigh();
     
     constructor(IAqua aqua) {
         AQUA = aqua;
@@ -58,6 +60,7 @@ contract FlashLoan is IERC3156FlashLender {
     
     function registerStrategy(Strategy calldata strategy) external {
         if (strategy.maker != msg.sender) revert Unauthorized();
+        if (strategy.feeBps > MAX_FEE_BPS) revert FeeTooHigh();
         bytes32 strategyHash = keccak256(abi.encode(strategy));
         
         if (strategyData[strategyHash].maker == address(0)) {
@@ -86,9 +89,31 @@ contract FlashLoan is IERC3156FlashLender {
         return total;
     }
     
-    function flashFee(address token, uint256 amount) public pure override returns (uint256) {
-        token;
-        return (amount * FEE_BASIS_POINTS) / BASIS_POINTS_DIVISOR;
+    /**
+     * @notice Get flash loan fee for ERC3156 interface
+     * @dev Returns the minimum fee across all strategies for this token
+     * For specific strategy fees, use getStrategyFee()
+     */
+    function flashFee(address token, uint256 amount) public view override returns (uint256) {
+        bytes32[] memory hashes = tokenStrategies[token];
+        if (hashes.length == 0) return 0;
+        
+        uint256 minFeeBps = type(uint256).max;
+        for (uint256 i = 0; i < hashes.length; i++) {
+            Strategy memory strategy = strategyData[hashes[i]];
+            if (strategy.feeBps < minFeeBps) {
+                minFeeBps = strategy.feeBps;
+            }
+        }
+        
+        return (amount * minFeeBps) / BASIS_POINTS_DIVISOR;
+    }
+    
+    /**
+     * @notice Calculate fee for a specific strategy
+     */
+    function getStrategyFee(Strategy memory strategy, uint256 amount) public pure returns (uint256) {
+        return (amount * strategy.feeBps) / BASIS_POINTS_DIVISOR;
     }
     
     function flashLoan(
@@ -166,7 +191,7 @@ contract FlashLoan is IERC3156FlashLender {
         uint256 amount,
         bytes calldata data
     ) internal returns (bool) {
-        uint256 fee = flashFee(strategy.token, amount);
+        uint256 fee = getStrategyFee(strategy, amount);
         uint256 amountPlusFee = amount + fee;
         
         AQUA.pull(
@@ -220,10 +245,16 @@ contract FlashLoan is IERC3156FlashLender {
         return true;
     }
     
-    function calculateFee(uint256 amount) external pure returns (uint256) {
-        return (amount * FEE_BASIS_POINTS) / BASIS_POINTS_DIVISOR;
+    /**
+     * @notice Calculate fee for a given fee basis points and amount
+     */
+    function calculateFee(uint256 feeBps, uint256 amount) external pure returns (uint256) {
+        return (amount * feeBps) / BASIS_POINTS_DIVISOR;
     }
     
+    /**
+     * @notice Get the hash for a strategy
+     */
     function getStrategyHash(Strategy calldata strategy) external pure returns (bytes32) {
         return keccak256(abi.encode(strategy));
     }

@@ -1,20 +1,19 @@
 /**
  * Contract addresses for Coco platform
- * Network: Arc Testnet (Chain ID: 5042002)
- * RPC: https://arc-testnet.drpc.org
- * Explorer: https://testnet.arcscan.app
+ * Network: Flare Mainnet (Chain ID: 14)
+ * RPC: https://flare-api.flare.network/ext/C/rpc
+ * Explorer: https://flare-explorer.flare.network
  */
 
-// Arc Testnet - Flash Loan Contracts
-export const AQUA_PROTOCOL_ADDRESS = '0x33Fb47472D03Ce0174830A6bD21e39F65d6d5425' as const;
-export const FLASH_LOAN_ADDRESS = '0x6c86812F1a5aeb738951B6f8A0b3b3FB4C856f82' as const;
-export const FLASH_LOAN_BORROWER_ADDRESS = '0x524902FA5e3535117E24e9D6826e5950bfbEF94E' as const;
+export const AQUA_PROTOCOL_ADDRESS = '0x6c86812F1a5aeb738951B6f8A0b3b3FB4C856f82' as const;
+export const FLASH_LOAN_ADDRESS = '0x1854C0EB9d9b8CABF76B00a0420F43139F0Be51d' as const;
+export const FLASH_LOAN_BORROWER_ADDRESS = '0x8062Dc6B0f837524c03A8d90bC8C5d6bBe880E9d' as const;
+export const DEPOSIT_HELPER_ADDRESS = '0x299182bbe03Af978B831E73D1514b3768D5E162D' as const;
 
-// Arc Testnet Native USDC (used for gas and transfers)
-export const USDC_ADDRESS = '0x3600000000000000000000000000000000000000' as const;
+export const USDC_ADDRESS = '0xFbDa5F676cB37624f28265A144A48B0d6e87d3b6' as const;
 
 // Chain ID
-export const ARC_TESTNET_CHAIN_ID = 5042002;
+export const FLARE_MAINNET_CHAIN_ID = 14;
 
 // Re-export Aqua utility functions
 export { 

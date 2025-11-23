@@ -8,7 +8,7 @@ import { parseUnits } from 'viem';
 import { QRScanner } from './QRScanner';
 import { AddressBook } from './AddressBook';
 import { TransactionSuccess } from './TransactionSuccess';
-import { USDC_ADDRESS, ARC_TESTNET_CHAIN_ID } from '@/lib/constants';
+import { USDC_ADDRESS, FLARE_MAINNET_CHAIN_ID } from '@/lib/constants';
 
 interface SendModalProps {
   isOpen: boolean;
@@ -111,7 +111,7 @@ export function SendModal({
         throw new Error('No smart account found');
       }
 
-      await smartAccount.switchChain(ARC_TESTNET_CHAIN_ID);
+      await smartAccount.switchChain(FLARE_MAINNET_CHAIN_ID);
       const provider = await smartAccount.getEthereumProvider();
 
       // Convert amount to USDC units (6 decimals)
@@ -331,7 +331,7 @@ export function SendModal({
                   }}
                 >
                   <p className="text-xs text-[#a3a3a5] leading-relaxed">
-                    You are sending USDC on Base Sepolia testnet. Make sure the recipient address is correct. Transactions cannot be reversed once confirmed.
+                    You are sending USDC on Flare mainnet. Make sure the recipient address is correct. Transactions cannot be reversed once confirmed.
                   </p>
                 </div>
               </div>

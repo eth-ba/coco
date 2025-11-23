@@ -1,7 +1,7 @@
 "use client";
 
 import { PrivyProvider } from "@privy-io/react-auth";
-import { arcTestnet } from "@/lib/chains";
+import { flare } from "@/lib/chains";
 import { SendModalProvider } from "@/contexts/SendModalContext";
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -18,8 +18,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
           createOnLogin: "users-without-wallets",
           requireUserPasswordOnCreate: false,
         },
-        defaultChain: arcTestnet,
-        supportedChains: [arcTestnet],
+        defaultChain: flare,
+        supportedChains: [flare],
       }}
     >
       <SendModalProvider>

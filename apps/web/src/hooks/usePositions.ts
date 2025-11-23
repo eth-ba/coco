@@ -5,10 +5,8 @@
 
 import { useState, useEffect } from 'react';
 import { useWallets } from '@privy-io/react-auth';
-import { formatUnits, parseAbiItem, keccak256, encodeAbiParameters } from 'viem';
+import { formatUnits, parseAbiItem, keccak256 } from 'viem';
 import { AQUA_PROTOCOL_ADDRESS, USDC_ADDRESS, FLASH_LOAN_ADDRESS } from '@/lib/constants';
-import aquaAbi from '@/abis/Aqua.json';
-import flashLoanAbi from '@/abis/FlashLoan.json';
 
 export interface Position {
   strategyHash: string;

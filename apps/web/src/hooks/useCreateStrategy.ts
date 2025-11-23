@@ -34,6 +34,7 @@ export interface Strategy {
   maker: string;
   token: string;
   salt: string;
+  feeBps: number; // Fee in basis points (e.g., 10 = 0.01%)
 }
 
 export function useCreateStrategy() {
@@ -72,8 +73,8 @@ export function useCreateStrategy() {
         console.log('✅ Connected to Chain ID:', parseInt(chainId, 16));
         console.log('✅ Current Block Number:', parseInt(blockNumber, 16));
         
-        if (parseInt(chainId, 16) !== 5042002) {
-          throw new Error(`Wrong network! Expected Arc Testnet (5042002), got ${parseInt(chainId, 16)}`);
+        if (parseInt(chainId, 16) !== 14) {
+          throw new Error(`Wrong network! Expected Flare Mainnet (14), got ${parseInt(chainId, 16)}`);
         }
       } catch (netError: any) {
         console.error('❌ Network verification failed:', netError);
@@ -84,10 +85,14 @@ export function useCreateStrategy() {
       const salt = `0x${Date.now().toString(16).padStart(64, '0')}`;
 
       // Create strategy object
+      // Note: feeDisplay is just for UI - contract uses hardcoded or configurable fees
+      const feeBps = 10; // Default 0.01% fee
+      
       const strategy: Strategy = {
         maker: smartAccount.address,
         token: USDC_ADDRESS,
-        salt
+        salt,
+        feeBps
       };
 
       console.log('📝 Strategy:', strategy);
@@ -101,7 +106,8 @@ export function useCreateStrategy() {
             components: [
               { name: 'maker', type: 'address' },
               { name: 'token', type: 'address' },
-              { name: 'salt', type: 'bytes32' }
+              { name: 'salt', type: 'bytes32' },
+              { name: 'feeBps', type: 'uint256' }
             ]
           }
         ],
@@ -109,6 +115,7 @@ export function useCreateStrategy() {
       );
       const strategyHash = keccak256(encodedStrategy);
       console.log('🔑 Strategy Hash:', strategyHash);
+      console.log('💰 Fee:', feeBps, 'basis points (0.01%)');
 
       // Step 1: Register Strategy with FlashLoan contract
       setCurrentStep(1);
@@ -137,7 +144,7 @@ export function useCreateStrategy() {
         });
         registerTxHash = txHashResult as string;
         console.log('✅ Transaction sent! Hash:', registerTxHash);
-        console.log('🔗 View on ArcScan:', `https://testnet.arcscan.app/tx/${registerTxHash}`);
+        console.log('🔗 View on Flare Explorer:', `https://flare-explorer.flare.network/tx/${registerTxHash}`);
       } catch (txError: any) {
         console.error('❌ Transaction failed:', txError);
         console.error('   Error code:', txError.code);

@@ -100,7 +100,8 @@ contract FlashLoanTest is Test {
         FlashLoan.Strategy memory strategy = FlashLoan.Strategy({
             maker: lender,
             token: address(usdc),
-            salt: bytes32(uint256(1))
+            salt: bytes32(uint256(1)),
+            feeBps: 10 // 0.01% fee
         });
         
         address[] memory tokens = new address[](1);
@@ -137,7 +138,8 @@ contract FlashLoanTest is Test {
         FlashLoan.Strategy memory strategy = FlashLoan.Strategy({
             maker: lender,
             token: address(usdc),
-            salt: bytes32(uint256(1))
+            salt: bytes32(uint256(1)),
+            feeBps: 10 // 0.01% fee
         });
         
         bytes32 strategyHash = keccak256(abi.encode(strategy));
@@ -152,9 +154,9 @@ contract FlashLoanTest is Test {
         
         console.log("Initial lender balance:", uint256(balanceBefore) / 1e6, "USDC");
         
-        // Fund borrower contract with USDC for fees
+        // Approve borrower to pull fees from borrowerAddr
         vm.prank(borrowerAddr);
-        usdc.transfer(address(borrower), 1 * 1e6);
+        usdc.approve(address(borrower), 1 * 1e6); // Approve 1 USDC for fees
         
         // Execute 10 flash loans
         for (uint256 i = 0; i < 10; i++) {
@@ -204,7 +206,8 @@ contract FlashLoanTest is Test {
         FlashLoan.Strategy memory strategy = FlashLoan.Strategy({
             maker: lender,
             token: address(usdc),
-            salt: bytes32(uint256(1))
+            salt: bytes32(uint256(1)),
+            feeBps: 10 // 0.01% fee
         });
         
         // Try to borrow more than available
@@ -218,7 +221,7 @@ contract FlashLoanTest is Test {
     function testCalculateFee() public view {
         console.log("\n=== Testing Fee Calculation ===");
         
-        uint256 fee = flashLoan.calculateFee(LOAN_AMOUNT);
+        uint256 fee = flashLoan.calculateFee(10, LOAN_AMOUNT); // 10 bps = 0.01%
         uint256 expectedFee = (LOAN_AMOUNT * 10) / 100000; // 0.01%
         
         console.log("Loan amount (USDC):", uint256(LOAN_AMOUNT / 1e6));

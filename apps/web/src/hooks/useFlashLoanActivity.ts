@@ -6,7 +6,7 @@
 import { useState, useEffect } from 'react';
 import { useWallets } from '@privy-io/react-auth';
 import { formatUnits, parseAbiItem, keccak256 } from 'viem';
-import { FLASH_LOAN_ADDRESS, USDC_ADDRESS } from '@/lib/constants';
+import { FLASH_LOAN_ADDRESS } from '@/lib/constants';
 
 export interface LoanActivity {
   id: string;

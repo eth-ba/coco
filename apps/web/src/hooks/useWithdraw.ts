@@ -45,7 +45,8 @@ export function useWithdraw() {
       const strategy: AquaStrategy = {
         maker: smartAccount.address as `0x${string}`,
         token: USDC_ADDRESS,
-        salt: '0x0000000000000000000000000000000000000000000000000000000000000001'
+        salt: '0x0000000000000000000000000000000000000000000000000000000000000001',
+        feeBps: 10 // Must match the fee used during deposit (0.01%)
       };
 
       // Calculate strategy hash

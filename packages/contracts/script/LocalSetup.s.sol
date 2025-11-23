@@ -94,7 +94,8 @@ contract LocalSetup is Script, Test {
         FlashLoan.Strategy memory strategy = FlashLoan.Strategy({
             maker: lender,
             token: address(usdc),
-            salt: bytes32(uint256(1))
+            salt: bytes32(uint256(1)),
+            feeBps: 10 // 0.01% fee
         });
         
         address[] memory tokens = new address[](1);

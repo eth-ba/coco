@@ -53,6 +53,7 @@ export interface AquaStrategy {
   maker: `0x${string}`;
   token: `0x${string}`;
   salt: `0x${string}`;
+  feeBps: number; // Fee in basis points (e.g., 10 = 0.01%)
 }
 
 /**
@@ -67,7 +68,8 @@ export function encodeStrategy(strategy: AquaStrategy): `0x${string}` {
         components: [
           { name: 'maker', type: 'address' },
           { name: 'token', type: 'address' },
-          { name: 'salt', type: 'bytes32' }
+          { name: 'salt', type: 'bytes32' },
+          { name: 'feeBps', type: 'uint256' }
         ]
       }
     ],
@@ -107,7 +109,8 @@ export function buildShipTransaction(
   const strategy: AquaStrategy = {
     maker: smartAccountAddress,
     token: USDC_ADDRESS,
-    salt: '0x0000000000000000000000000000000000000000000000000000000000000001'
+    salt: '0x0000000000000000000000000000000000000000000000000000000000000001',
+    feeBps: 10 // 0.01% default fee
   };
 
   const encodedStrategy = encodeStrategy(strategy);
