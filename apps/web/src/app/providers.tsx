@@ -2,28 +2,25 @@
 
 import { PrivyProvider } from "@privy-io/react-auth";
 import { base, arbitrum, optimism, baseSepolia } from "viem/chains";
-import { defineChain, type Chain } from "viem";
+import { addRpcUrlOverrideToChain } from "@privy-io/chains";
 
-// Helper to create custom chain config if RPC is provided
-const createCustomChain = (chain: Chain, rpcUrl?: string) => {
-  if (!rpcUrl) return chain;
-  return defineChain({
-    ...chain,
-    rpcUrls: {
-      default: { http: [rpcUrl] },
-      public: { http: [rpcUrl] },
-    },
-  });
-};
+// Use Privy's official method to override RPC URLs
+// This ensures Privy's internal services (including the approval modal) use the custom RPC
+const customBase = process.env.NEXT_PUBLIC_BASE_RPC_URL 
+  ? addRpcUrlOverrideToChain(base, process.env.NEXT_PUBLIC_BASE_RPC_URL)
+  : base;
 
-const customBase = createCustomChain(base, process.env.NEXT_PUBLIC_BASE_RPC_URL);
-const customArbitrum = createCustomChain(arbitrum, process.env.NEXT_PUBLIC_ARBITRUM_RPC_URL);
-const customOptimism = createCustomChain(optimism, process.env.NEXT_PUBLIC_OPTIMISM_RPC_URL);
+const customArbitrum = process.env.NEXT_PUBLIC_ARBITRUM_RPC_URL
+  ? addRpcUrlOverrideToChain(arbitrum, process.env.NEXT_PUBLIC_ARBITRUM_RPC_URL)
+  : arbitrum;
+
+const customOptimism = process.env.NEXT_PUBLIC_OPTIMISM_RPC_URL
+  ? addRpcUrlOverrideToChain(optimism, process.env.NEXT_PUBLIC_OPTIMISM_RPC_URL)
+  : optimism;
 
 const supportedChains = [customBase, customArbitrum, customOptimism, baseSepolia];
 
 export function Providers({ children }: { children: React.ReactNode }) {
-    console.log("🔌 Providers mounting. AppID:", process.env.NEXT_PUBLIC_PRIVY_APP_ID);
     return (
     <PrivyProvider
       appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID || ""}

@@ -36,11 +36,6 @@ export function BridgeForm({ smartAccount: propSmartAccount }: BridgeFormProps) 
   const handleBridge = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log("🌉 === BRIDGE FLOW STARTED ===");
-    console.log("Source Chain ID:", sourceChainId);
-    console.log("Destination Chain ID:", destinationChainId);
-    console.log("Amount:", amount);
-    
     if (!smartAccount?.address) {
       setError("Please connect your wallet");
       console.error("❌ No smart account address");
@@ -70,7 +65,6 @@ export function BridgeForm({ smartAccount: propSmartAccount }: BridgeFormProps) 
       if (!selectedChain) throw new Error(`Chain ${sourceChainId} not supported`);
 
       const customRpcUrl = selectedChain.rpcUrls.default.http[0];
-      console.log("🔗 Using RPC URL:", customRpcUrl);
       
       const provider = await smartAccount.getEthereumProvider();
       const walletClient = createWalletClient({
@@ -78,19 +72,15 @@ export function BridgeForm({ smartAccount: propSmartAccount }: BridgeFormProps) 
         chain: selectedChain,
         transport: custom(provider),
       });
-      console.log("✅ Wallet client created");
 
       // Create PrivyMultiChainAccount for EIL SDK
       const eilModule = await import("@/lib/eil");
-      console.log('🔧 eil module loaded:', eilModule);
       const account = eilModule.createPrivyAccount(walletClient, smartAccount.address as `0x${string}`);
       if (!account) {
         throw new Error('🔧 createPrivyAccount returned undefined');
       }
-      console.log("✅ Created PrivyMultiChainAccount via factory");
 
       const amountInUnits = parseUnits(amount, 6);
-      console.log("💰 Amount in units (6 decimals):", amountInUnits.toString());
       
       // Create EIL service
       const { EILService } = await import("@/lib/eil");
@@ -114,9 +104,6 @@ export function BridgeForm({ smartAccount: propSmartAccount }: BridgeFormProps) 
 
       setStatus("Bridge completed!");
       setTxHash(txHash);
-      
-      console.log("🎉 === BRIDGE FLOW COMPLETED ===");
-      console.log("✅ Real EIL transaction executed!");
       
       // Reset form
       setTimeout(() => {

@@ -76,14 +76,7 @@ export function useDepositWithAccount(smartAccount?: ConnectedWallet) {
       // Parse amount to smallest unit (USDC has 6 decimals)
       const amount = parseUnits(amountUSDC, 6);
 
-      console.log('💰 Depositing', amountUSDC, 'USDC via YieldAutomator');
-      console.log('📍 YieldAutomator:', YIELD_AUTOMATOR_ADDRESS);
-      console.log('📊 Strategy:', SIMPLE_VAULT_STRATEGY);
-      console.log('🌐 Using RPC:', customRpcUrl);
-
       // Step 1: Approve USDC to YieldAutomator contract
-      console.log('Step 1/2: Approving USDC to YieldAutomator...');
-      
       const approveTxHash = await walletClient.writeContract({
         address: USDC_ADDRESS as `0x${string}`,
         abi: erc20Abi,
@@ -91,10 +84,7 @@ export function useDepositWithAccount(smartAccount?: ConnectedWallet) {
         args: [YIELD_AUTOMATOR_ADDRESS as `0x${string}`, amount]
       });
 
-      console.log('✅ Approval transaction sent:', approveTxHash);
-
       // Wait for approval to be mined
-      console.log('⏳ Waiting for approval to be confirmed...');
       const approvalReceipt = await publicClient.waitForTransactionReceipt({
         hash: approveTxHash,
         timeout: 30_000 // 30 seconds
@@ -104,20 +94,13 @@ export function useDepositWithAccount(smartAccount?: ConnectedWallet) {
         throw new Error('Approval transaction failed');
       }
 
-      console.log('✅ Approval confirmed in block:', approvalReceipt.blockNumber);
-
       // Step 2: Call YieldAutomator.deposit()
-      console.log('Step 2/2: Calling YieldAutomator.deposit()...');
-
       const depositTxHash = await walletClient.writeContract({
         address: YIELD_AUTOMATOR_ADDRESS as `0x${string}`,
         abi: yieldAutomatorAbi,
         functionName: 'deposit',
         args: [amount, BigInt(SIMPLE_VAULT_STRATEGY)]
       });
-
-      console.log('✅ Deposit transaction sent:', depositTxHash);
-      console.log('🎉 Funds deposited to strategy', SIMPLE_VAULT_STRATEGY);
 
       setTxHash(depositTxHash);
       
@@ -127,7 +110,6 @@ export function useDepositWithAccount(smartAccount?: ConnectedWallet) {
         strategy: SIMPLE_VAULT_STRATEGY
       };
     } catch (err) {
-      console.error('❌ Deposit error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to deposit. Please try again.';
       setError(errorMessage);
       return {

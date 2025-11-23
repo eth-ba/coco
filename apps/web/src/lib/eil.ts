@@ -14,7 +14,6 @@ import { type WalletClient, type Address, type Hex } from 'viem';
  * Returns a plain object to avoid class/prototype issues
  */
 export function createPrivyAccount(walletClient: WalletClient, address: Address) {
-  console.log('🔧 createPrivyAccount called with address:', address);
   const smartAccount = {
     // ── Identity ───────────────────────────────────────────────────────
     /** async version – used by the SDK */
@@ -73,7 +72,9 @@ export function createPrivyAccount(walletClient: WalletClient, address: Address)
 
         // Fallback: Manual signing
         console.log('✍️ Native signing unavailable, falling back to manual signing...');
-        const manuallySignedOps = await Promise.all(ops.map(async (op) => {
+        
+        const manuallySignedOps = [];
+        for (const op of ops) {
           const userOpHash = getUserOpHash(op);
           console.log('✍️ Signing hash:', userOpHash);
           
@@ -84,9 +85,9 @@ export function createPrivyAccount(walletClient: WalletClient, address: Address)
           });
           
           console.log('✍️ Signature obtained:', signature);
-          return { ...op, signature };
-        }));
-
+          manuallySignedOps.push({ ...op, signature });
+        }
+        
         return manuallySignedOps;
       } catch (error) {
         console.error('❌ signUserOps failed:', error);
@@ -101,15 +102,228 @@ export function createPrivyAccount(walletClient: WalletClient, address: Address)
     getChainId: async () => BigInt(0), // will be overwritten by the builder’s `startBatch`
 
     // Encoding/Sending placeholders
-    encodeCalls: async (_chainId: bigint, _calls: Array<unknown>) => '0x' as Hex,
+    encodeCalls: async (chainId: bigint, calls: Array<unknown>) => {
+      console.log('📝 encodeCalls called with chainId:', chainId);
+      
+      // Import encodeFunctionData from viem
+      const { encodeFunctionData } = await import('viem');
+      
+      if (!calls || calls.length === 0) {
+        return '0x' as Hex;
+      }
+      
+      // EIL SDK passes calls in format: {target: MultichainToken/Contract, functionName: string, args: any[]}
+      const callArray = calls as Array<{target: any, functionName: string, args: any[]}>;
+      
+      let destinations: Address[] = [];
+      let values: bigint[] = [];
+      let datas: Hex[] = [];
+      
+      for (const call of callArray) {
+        try {
+          // Log the deployments to understand the structure
+          if (call.target?.deployments) {
+            const deploymentChains = Array.from(call.target.deployments.keys());
+            console.log(`📝 ${call.functionName}: Deployments available on chains:`, deploymentChains);
+          }
+          
+          // Extract the contract address for this chain from the target's deployments Map
+          const targetAddress = call.target?.deployments?.get?.(chainId) || 
+                               call.target?.deployments?.get?.(Number(chainId)) ||
+                               call.target?.address;
+          
+          if (!targetAddress) {
+            console.error('❌ Could not find address for target on chain', chainId, call.target);
+            throw new Error(`No deployment found for chain ${chainId}`);
+          }
+          
+          console.log(`📝 Encoding ${call.functionName} on ${targetAddress}`);
+          console.log(`📝 Raw args:`, JSON.stringify(call.args, (key, value) => {
+            if (value?.deployments instanceof Map) {
+              return `[MultichainObject with deployments on chains: ${Array.from(value.deployments.keys())}]`;
+            }
+            return typeof value === 'bigint' ? value.toString() : value;
+          }, 2));
+          
+          // Recursively resolve any args that are MultichainToken/Contract objects to their addresses on this chain
+          const resolveArg = (arg: any): any => {
+            // If arg has deployments Map, it's a multichain object - get its address for this chain
+            if (arg?.deployments?.get) {
+              const resolvedAddr = arg.deployments.get(chainId) || arg.deployments.get(Number(chainId));
+              console.log(`  📝 Resolved multichain arg to:`, resolvedAddr);
+              return resolvedAddr;
+            }
+            // If arg is an array, recursively resolve each element
+            if (Array.isArray(arg)) {
+              return arg.map(resolveArg);
+            }
+            // If arg is an object (but not null), recursively resolve its properties
+            if (arg && typeof arg === 'object' && arg.constructor === Object) {
+              const resolved: any = {};
+              for (const [key, value] of Object.entries(arg)) {
+                resolved[key] = resolveArg(value);
+              }
+              return resolved;
+            }
+            return arg;
+          };
+          
+          const resolvedArgs = call.args.map(resolveArg);
+          
+          // Convert numeric strings to BigInt for proper ABI encoding
+          const convertNumericStrings = (value: any): any => {
+            // If it's a string that looks like a number, convert to BigInt
+            if (typeof value === 'string' && /^\d+$/.test(value)) {
+              return BigInt(value);
+            }
+            // Recursively convert arrays
+            if (Array.isArray(value)) {
+              return value.map(convertNumericStrings);
+            }
+            // Recursively convert objects
+            if (value && typeof value === 'object' && value.constructor === Object) {
+              const converted: any = {};
+              for (const [key, val] of Object.entries(value)) {
+                converted[key] = convertNumericStrings(val);
+              }
+              return converted;
+            }
+            return value;
+          };
+          
+          const finalArgs = resolvedArgs.map(convertNumericStrings);
+          
+          console.log(`📝 Resolved args:`, JSON.stringify(finalArgs, (key, value) => 
+            typeof value === 'bigint' ? value.toString() : value, 2));
+          
+          // Encode the function call
+          const callData = encodeFunctionData({
+            abi: call.target.abi,
+            functionName: call.functionName,
+            args: finalArgs
+          });
+          
+          console.log(`📝 Encoded data:`, callData);
+          
+          destinations.push(targetAddress);
+          values.push(BigInt(0)); // No ETH value for ERC20 calls
+          datas.push(callData);
+        } catch (error) {
+          console.error('❌ Error encoding call:', error, call);
+          throw error;
+        }
+      }
+      
+      console.log('📝 Final batch:', {
+        destinations,
+        values: values.map(v => v.toString()),
+        datas
+      });
+      
+      // Encode as executeBatch call
+      const encoded = encodeFunctionData({
+        abi: [{
+          name: 'executeBatch',
+          type: 'function',
+          stateMutability: 'nonpayable',
+          inputs: [
+            { name: 'dest', type: 'address[]' },
+            { name: 'value', type: 'uint256[]' },
+            { name: 'func', type: 'bytes[]' }
+          ],
+          outputs: []
+        }],
+        functionName: 'executeBatch',
+        args: [destinations, values, datas]
+      });
+      
+      console.log('📝 Final encoded calls:', encoded);
+      return encoded;
+    },
     encodeStaticCalls: async (chainId: bigint, calls: Array<unknown>) => '0x' as Hex,
-    sendUserOperation: async (_userOp: any) => '0x' as Hex,
+    
+    /**
+     * Broadcast the UserOperation to the network via the EntryPoint contract.
+     * Since we don't have a bundler, we act as the bundler by calling handleOps directly.
+     */
+    sendUserOperation: async (userOp: any) => {
+      console.log('🚀 sendUserOperation called with:', userOp);
+      
+      try {
+        // Get the chain ID from the UserOp
+        const chainId = Number(userOp.chainId);
+        
+        // Use EIL's Tenderly virtualnet bundler
+        const bundlerUrl = `https://vnet.erc4337.io/bundler/${chainId}`;
+        console.log('📡 Submitting to bundler:', bundlerUrl);
+        
+        // Format the UserOp for the bundler (v0.7 format)
+        const formattedOp = {
+          sender: userOp.sender,
+          nonce: `0x${BigInt(userOp.nonce).toString(16)}`,
+          callData: userOp.callData || '0x',
+          signature: userOp.signature || '0x',
+          initCode: userOp.initCode || '0x',
+          paymasterAndData: userOp.paymasterAndData || '0x',
+          // Pack gas limits for v0.7
+          accountGasLimits: (() => {
+            const verificationGasLimit = BigInt(userOp.verificationGasLimit || 0);
+            const callGasLimit = BigInt(userOp.callGasLimit || 0);
+            const packed = (verificationGasLimit << BigInt(128)) | callGasLimit;
+            return `0x${packed.toString(16).padStart(64, '0')}`;
+          })(),
+          preVerificationGas: `0x${BigInt(userOp.preVerificationGas || 0).toString(16)}`,
+          // Pack gas fees for v0.7
+          gasFees: (() => {
+            const maxPriorityFeePerGas = BigInt(userOp.maxPriorityFeePerGas || 0);
+            const maxFeePerGas = BigInt(userOp.maxFeePerGas || 0);
+            const packed = (maxPriorityFeePerGas << BigInt(128)) | maxFeePerGas;
+            return `0x${packed.toString(16).padStart(64, '0')}`;
+          })()
+        };
+
+        console.log('📦 Formatted UserOp:', formattedOp);
+
+        // Submit to bundler via RPC
+        const response = await fetch(bundlerUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            id: 1,
+            method: 'eth_sendUserOperation',
+            params: [
+              formattedOp,
+              userOp.entryPointAddress || '0x0000000071727De22E5E9d8baF0edAc6f37da032'
+            ]
+          })
+        });
+
+        const result = await response.json();
+        
+        if (result.error) {
+          console.error('❌ Bundler error:', result.error);
+          throw new Error(`Bundler error: ${result.error.message || JSON.stringify(result.error)}`);
+        }
+
+        const userOpHash = result.result;
+        console.log('✅ UserOperation submitted! Hash:', userOpHash);
+        
+        // Return the userOpHash (the bundler will handle the actual tx submission)
+        return userOpHash as Hex;
+      } catch (error) {
+        console.error('❌ Failed to send UserOperation:', error);
+        throw error;
+      }
+    },
+    
     verifyBundlerConfig: async (_chainId: bigint, _entryPoints: Address) => {},
 
     // Bundler manager placeholder
     bundlerManager: null,
   };
-  console.log('🔧 createPrivyAccount returning smartAccount:', smartAccount);
   return smartAccount;
 }
 /**
@@ -143,13 +357,6 @@ export class EILService {
         amount: amountInUnits.toString(),
         recipient: recipientAddress
       });
-      console.log('🔍 EIL Service received account:', account);
-      console.log('🔍 account keys:', Object.keys(account));
-    if (account.getAddress) {
-        console.log('🔍 account.getAddress is type:', typeof account.getAddress);
-    } else {
-        console.log('❌ account.getAddress is MISSING');
-    }
 
     try {
       // 1. Create token with USDC addresses across chains
@@ -165,13 +372,13 @@ export class EILService {
       const usdc = this.sdk.createToken('USDC', usdcDeployments as any);
       
       // 2. Build cross-chain operation with voucher pattern
+      // 2. Build cross-chain operation with voucher pattern
       statusCallback?.('Building cross-chain operation...');
       
       // Create a plain object adapter to ensure methods are present
       const accountAdapter = {
         ...account, // Spread all methods from the original account (including encodeCalls, etc.)
         getAddress: async () => {
-          console.log('🔍 adapter.getAddress called');
           // Use recipientAddress directly to avoid potential issues with account object
           return recipientAddress as Address;
         },
@@ -179,9 +386,6 @@ export class EILService {
         getAccount: function () { return this; },
       };
 
-      console.log("  🔍 Inspecting account adapter:");
-      console.log("  Has getAddress?", typeof accountAdapter.getAddress);
-      
       const executor = await this.sdk
         .createBuilder()
         .useAccount(accountAdapter as any)

@@ -15,7 +15,6 @@ import { customBase } from "@/lib/chains";
 export default function Dashboard() {
   const { authenticated, ready, smartAccountAddress, logout } = useAuth();
   const { wallets } = useWallets();
-  console.log("📊 Dashboard mounting. Wallets:", wallets.length, "Authenticated:", authenticated);
   const smartAccount = wallets.find((w) => w.walletClientType === 'privy');
   const router = useRouter();
   const [usdcBalance, setUsdcBalance] = useState<string>("0");
@@ -35,7 +34,6 @@ export default function Dashboard() {
       
       try {
         if (!smartAccount) {
-          console.log('❌ No smart account found');
           return;
         }
 
@@ -45,18 +43,12 @@ export default function Dashboard() {
           chain: customBase,
           transport: http(customRpcUrl)
         });
-
-        console.log('🔍 Fetching balances for:', smartAccountAddress);
-        console.log('📍 USDC Contract:', USDC_ADDRESS);
-        console.log('🌐 Using RPC:', customRpcUrl);
-        console.log('⛓️ Chain:', customBase.name, '(ID:', customBase.id, ')');
         
         // Get ETH balance using custom RPC
         const ethBal = await publicClient.getBalance({
           address: smartAccountAddress as `0x${string}`
         });
         const formattedEth = formatUnits(ethBal, 18);
-        console.log('💎 ETH Balance:', formattedEth, 'ETH');
         setEthBalance(formattedEth);
         
         // Get USDC balance using custom RPC
@@ -75,7 +67,6 @@ export default function Dashboard() {
           });
 
           const formattedBalance = formatUnits(balance, 6);
-          console.log('💰 USDC Balance:', formattedBalance, 'USDC');
           
           setUsdcBalance(formattedBalance);
         } catch (usdcError) {
