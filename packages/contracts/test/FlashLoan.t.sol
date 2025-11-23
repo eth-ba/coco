@@ -54,6 +54,8 @@ contract FlashLoanTest is Test {
             USDC_ADDRESS = 0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85; // Optimism
         } else if (block.chainid == 137) {
             USDC_ADDRESS = 0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359; // Polygon
+        } else if (block.chainid == 5042002) {
+            USDC_ADDRESS = address(0);
         } else {
             revert("Unsupported chain");
         }

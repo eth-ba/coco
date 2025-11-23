@@ -8,7 +8,6 @@ import {IAqua} from "../src/interfaces/IAqua.sol";
 
 /**
  * @title DeployTestnet
- * @notice Deploy to testnet/mainnet using REAL Aqua Protocol
  * @dev Uses deployed Aqua contract at 0x499943e74fb0ce105688beee8ef2abec5d936d31
  * 
  * Supported Networks (all use same address):
@@ -25,6 +24,9 @@ import {IAqua} from "../src/interfaces/IAqua.sol";
  * - Sonic (146)
  * - Unichain (1301)
  * 
+ * Arc Testnet (5042002) - Requires separate Aqua deployment
+ * Note: Arc uses USDC as native gas token (18 decimals)
+ * 
  * Usage:
  * forge script script/DeployTestnet.s.sol:DeployTestnet \
  *   --rpc-url $RPC_URL \
@@ -32,7 +34,17 @@ import {IAqua} from "../src/interfaces/IAqua.sol";
  *   --verify
  */
 contract DeployTestnet is Script {
-    address constant AQUA_ADDRESS = 0x499943E74FB0cE105688beeE8Ef2ABec5D936d31;
+    // Default Aqua address for most chains
+    address constant DEFAULT_AQUA = 0x499943E74FB0cE105688beeE8Ef2ABec5D936d31;
+    // Arc Testnet Aqua address
+    address constant ARC_AQUA = 0x33Fb47472D03Ce0174830A6bD21e39F65d6d5425;
+    
+    function getAquaAddress() internal view returns (address) {
+        if (block.chainid == 5042002) {
+            return ARC_AQUA; // Arc Testnet
+        }
+        return DEFAULT_AQUA; // All other supported chains
+    }
     
     function run() external returns (
         FlashLoan flashLoan,
@@ -40,16 +52,17 @@ contract DeployTestnet is Script {
     ) {
         uint256 deployerKey = vm.envUint("PRIVATE_KEY");
         address deployer = vm.addr(deployerKey);
+        address aquaAddress = getAquaAddress();
         
         console.log("\n=== Deploying ===");
         console.log("Deployer:", deployer);
         console.log("Chain ID:", block.chainid);
-        console.log("Using Real Aqua at:", AQUA_ADDRESS);
+        console.log("Using Aqua at:", aquaAddress);
         
         vm.startBroadcast(deployerKey);
         
         console.log("\n--- Deploying FlashLoan Contract ---");
-        flashLoan = new FlashLoan(IAqua(AQUA_ADDRESS));
+        flashLoan = new FlashLoan(IAqua(aquaAddress));
         console.log("FlashLoan deployed at:", address(flashLoan));
         
         console.log("\n--- Deploying FlashLoanBorrower ---");
@@ -60,13 +73,13 @@ contract DeployTestnet is Script {
         
         console.log("\n=== Deployment Complete ===");
         console.log("Add to your .env:");
-        console.log("AQUA_ADDRESS=%s", AQUA_ADDRESS);
+        console.log("AQUA_ADDRESS=%s", aquaAddress);
         console.log("FLASH_LOAN_ADDRESS=%s", address(flashLoan));
         console.log("BORROWER_CONTRACT_ADDRESS=%s", address(borrower));
         
         console.log("\n=== Next Steps ===");
         console.log("1. Approve USDC (or other token) to Aqua:");
-        console.log("   IERC20(token).approve(%s, type(uint256).max)", AQUA_ADDRESS);
+        console.log("   IERC20(token).approve(%s, type(uint256).max)", aquaAddress);
         console.log("");
         console.log("2. Ship liquidity to flash loan app:");
         console.log("   aqua.ship(%s, strategy, [token], [amount])", address(flashLoan));

@@ -30,6 +30,7 @@ contract LocalSetup is Script, Test {
         if (block.chainid == 42161) return 0xaf88d065e77c8cC2239327C5EDb3A432268e5831; // Arbitrum
         if (block.chainid == 10) return 0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85; // Optimism
         if (block.chainid == 137) return 0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359; // Polygon
+        if (block.chainid == 5042002) return address(0); // Arc Testnet
         revert("Unsupported chain");
     }
     
