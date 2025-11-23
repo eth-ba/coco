@@ -6,9 +6,10 @@ import { useEffect, useState } from "react";
 import { DepositForm } from "@/components/DepositForm";
 import { WithdrawModal } from "@/components/WithdrawModal";
 import { useWithdraw } from "@/hooks/useWithdraw";
-import { formatUnits } from "viem";
+import { formatUnits, createPublicClient, http } from "viem";
 import { USDC_ADDRESS } from "@/lib/constants";
 import { useWallets } from "@privy-io/react-auth";
+import { customBase } from "@/lib/chains";
 
 export default function Dashboard() {
   const { authenticated, ready, smartAccountAddress, logout } = useAuth();
@@ -23,7 +24,7 @@ export default function Dashboard() {
   
   const { withdraw, isLoading: isWithdrawing } = useWithdraw();
 
-  // Get USDC balance
+  // Get USDC and ETH balance
   useEffect(() => {
     const fetchBalance = async () => {
       if (!smartAccountAddress) return;
@@ -35,43 +36,51 @@ export default function Dashboard() {
           return;
         }
 
-        console.log('🔍 Fetching USDC balance for:', smartAccountAddress);
-        console.log('📍 USDC Contract:', USDC_ADDRESS);
-        console.log('🌐 Network: Base Sepolia (Chain ID: 84532)');
-
-        const provider = await smartAccount.getEthereumProvider();
-        
-        // Check current chain
-        const chainId = await provider.request({ method: 'eth_chainId' });
-        console.log('⛓️ Current Chain ID:', chainId);
-        
-        // Get ETH balance
-        const ethBalanceHex = await provider.request({
-          method: 'eth_getBalance',
-          params: [smartAccountAddress, 'latest']
+        // Use custom RPC from chains.ts instead of Privy's provider
+        const customRpcUrl = customBase.rpcUrls.default.http[0];
+        const publicClient = createPublicClient({
+          chain: customBase,
+          transport: http(customRpcUrl)
         });
-        const ethBal = BigInt(ethBalanceHex as string);
+
+        console.log('🔍 Fetching balances for:', smartAccountAddress);
+        console.log('📍 USDC Contract:', USDC_ADDRESS);
+        console.log('🌐 Using RPC:', customRpcUrl);
+        console.log('⛓️ Chain:', customBase.name, '(ID:', customBase.id, ')');
+        
+        // Get ETH balance using custom RPC
+        const ethBal = await publicClient.getBalance({
+          address: smartAccountAddress as `0x${string}`
+        });
         const formattedEth = formatUnits(ethBal, 18);
         console.log('💎 ETH Balance:', formattedEth, 'ETH');
         setEthBalance(formattedEth);
         
-        // ERC20 balanceOf call for USDC
-        const balanceHex = await provider.request({
-          method: 'eth_call',
-          params: [{
-            to: USDC_ADDRESS,
-            data: `0x70a08231000000000000000000000000${smartAccountAddress.slice(2)}` // balanceOf(address)
-          }, 'latest']
-        });
+        // Get USDC balance using custom RPC
+        try {
+          const balance = await publicClient.readContract({
+            address: USDC_ADDRESS as `0x${string}`,
+            abi: [{
+              name: 'balanceOf',
+              type: 'function',
+              stateMutability: 'view',
+              inputs: [{ name: 'account', type: 'address' }],
+              outputs: [{ name: '', type: 'uint256' }]
+            }],
+            functionName: 'balanceOf',
+            args: [smartAccountAddress as `0x${string}`]
+          });
 
-        console.log('📊 USDC Balance (hex):', balanceHex);
-        const balance = BigInt(balanceHex as string);
-        const formattedBalance = formatUnits(balance, 6);
-        console.log('💰 USDC Balance (formatted):', formattedBalance, 'USDC');
-        
-        setUsdcBalance(formattedBalance);
+          const formattedBalance = formatUnits(balance, 6);
+          console.log('💰 USDC Balance:', formattedBalance, 'USDC');
+          
+          setUsdcBalance(formattedBalance);
+        } catch (usdcError) {
+          console.warn('⚠️ Could not fetch USDC balance (contract may not exist on fork):', usdcError);
+          setUsdcBalance('0.00');
+        }
       } catch (error) {
-        console.error('❌ Error fetching USDC balance:', error);
+        console.error('❌ Error fetching balances:', error);
       }
     };
 
@@ -96,17 +105,26 @@ export default function Dashboard() {
       const smartAccount = wallets.find((w) => w.walletClientType === 'privy');
       if (!smartAccount) return;
 
-      const provider = await smartAccount.getEthereumProvider();
-      
-      const balanceHex = await provider.request({
-        method: 'eth_call',
-        params: [{
-          to: USDC_ADDRESS,
-          data: `0x70a08231000000000000000000000000${smartAccountAddress.slice(2)}`
-        }, 'latest']
+      // Use custom RPC
+      const customRpcUrl = customBase.rpcUrls.default.http[0];
+      const publicClient = createPublicClient({
+        chain: customBase,
+        transport: http(customRpcUrl)
       });
 
-      const balance = BigInt(balanceHex as string);
+      const balance = await publicClient.readContract({
+        address: USDC_ADDRESS as `0x${string}`,
+        abi: [{
+          name: 'balanceOf',
+          type: 'function',
+          stateMutability: 'view',
+          inputs: [{ name: 'account', type: 'address' }],
+          outputs: [{ name: '', type: 'uint256' }]
+        }],
+        functionName: 'balanceOf',
+        args: [smartAccountAddress as `0x${string}`]
+      });
+
       setUsdcBalance(formatUnits(balance, 6));
     } catch (error) {
       console.error('Error refreshing balance:', error);
@@ -185,7 +203,7 @@ export default function Dashboard() {
             </div>
             <p className="text-4xl font-bold">{parseFloat(usdcBalance).toFixed(2)} USDC</p>
             <p className="text-xs text-muted-foreground mt-1">
-              Available to deposit • Base Sepolia
+              Available to deposit • {customBase.name}
             </p>
             <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-muted">
               ETH: {parseFloat(ethBalance).toFixed(4)} ETH (for gas)

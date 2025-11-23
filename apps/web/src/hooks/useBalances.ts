@@ -2,15 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useWallets } from '@privy-io/react-auth';
 import { formatUnits, parseAbi } from 'viem';
 import { publicClients } from '@/lib/chains';
-
-import { base, arbitrum, optimism } from 'viem/chains';
-
-// USDC addresses on different chains
-const USDC_ADDRESSES: Record<number, string> = {
-  [base.id]: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-  [arbitrum.id]: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
-  [optimism.id]: '0x0b2C639c533813f4Aa9D7837CAf992cL9d187800', // Placeholder
-};
+import { USDC_ADDRESSES } from '@/lib/constants';
 
 const erc20Abi = parseAbi([
   'function balanceOf(address owner) view returns (uint256)',
