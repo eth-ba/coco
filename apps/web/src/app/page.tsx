@@ -3,6 +3,9 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import Image from "next/image";
+
+export const dynamic = 'force-dynamic';
 
 export default function Home() {
   const { login, authenticated, ready } = useAuth();
@@ -10,33 +13,33 @@ export default function Home() {
 
   useEffect(() => {
     if (ready && authenticated) {
-      router.push("/dashboard");
+      router.push("/home");
     }
   }, [ready, authenticated, router]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <main className="flex min-h-screen w-full flex-col items-center justify-center px-6 sm:px-8">
-        <div className="flex flex-col items-center gap-8 text-center max-w-2xl">
-          <h1 className="text-5xl sm:text-6xl font-bold tracking-tight">
-            🥥 Coco
-          </h1>
-          <p className="text-xl sm:text-2xl text-muted-foreground">
-            High-yield stablecoin savings. Any chain. Zero complexity.
-          </p>
-          <div className="flex flex-col gap-4 w-full sm:flex-row sm:justify-center mt-8">
-            <button
-              onClick={login}
-              disabled={!ready}
-              className="flex h-14 items-center justify-center rounded-xl bg-primary px-8 text-lg font-semibold text-primary-foreground transition-colors hover:opacity-90 disabled:opacity-50"
-            >
-              {ready ? "Get Started" : "Loading..."}
-            </button>
-            <button className="flex h-14 items-center justify-center rounded-xl border-2 border-border px-8 text-lg font-semibold transition-colors hover:bg-secondary">
-              Learn More
-            </button>
+    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#1C1C1E' }}>
+      <main className="flex min-h-screen w-full flex-col items-center justify-between px-6 py-12">
+        {/* Logo in center */}
+        <div className="flex-1 flex items-center justify-center">
+          <Image
+            src="/icons/splashcocologo.svg"
+            alt="Coco Logo"
+            width={200}
+            height={200}
+            priority
+            style={{ width: 'auto', height: 'auto' }}
+          />
         </div>
-        </div>
+
+        {/* Start growing button at bottom */}
+        <button
+          onClick={login}
+          disabled={!ready}
+          className="w-full max-w-md h-14 rounded-full bg-white text-black text-lg font-semibold transition-opacity hover:opacity-90 disabled:opacity-50 font-sans"
+        >
+          {ready ? "Start growing" : "Loading..."}
+        </button>
       </main>
     </div>
   );

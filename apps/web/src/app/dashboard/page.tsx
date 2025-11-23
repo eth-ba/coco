@@ -10,6 +10,8 @@ import { formatUnits } from "viem";
 import { USDC_ADDRESS } from "@/lib/constants";
 import { useWallets } from "@privy-io/react-auth";
 
+export const dynamic = 'force-dynamic';
+
 export default function Dashboard() {
   const { authenticated, ready, smartAccountAddress, logout } = useAuth();
   const { wallets } = useWallets();
@@ -26,7 +28,8 @@ export default function Dashboard() {
   // Get USDC balance
   useEffect(() => {
     const fetchBalance = async () => {
-      if (!smartAccountAddress) return;
+      // Wait for Privy to be ready before accessing wallets
+      if (!ready || !smartAccountAddress || !wallets.length) return;
       
       try {
         const smartAccount = wallets.find((w) => w.walletClientType === 'privy');
@@ -78,7 +81,7 @@ export default function Dashboard() {
     fetchBalance();
     const interval = setInterval(fetchBalance, 10000); // Refresh every 10s
     return () => clearInterval(interval);
-  }, [smartAccountAddress, wallets]);
+  }, [ready, smartAccountAddress, wallets]);
 
   const copyAddress = () => {
     if (smartAccountAddress) {
@@ -90,7 +93,10 @@ export default function Dashboard() {
 
   const refreshBalance = async () => {
     setIsRefreshing(true);
-    if (!smartAccountAddress) return;
+    if (!ready || !smartAccountAddress || !wallets.length) {
+      setIsRefreshing(false);
+      return;
+    }
     
     try {
       const smartAccount = wallets.find((w) => w.walletClientType === 'privy');

@@ -2,6 +2,7 @@
 
 import { PrivyProvider } from "@privy-io/react-auth";
 import { baseSepolia } from "viem/chains";
+import { SendModalProvider } from "@/contexts/SendModalContext";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -22,7 +23,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
         supportedChains: [baseSepolia],
       }}
     >
-      {children}
+      <SendModalProvider>
+        {children}
+      </SendModalProvider>
     </PrivyProvider>
   );
 }

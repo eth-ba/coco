@@ -4,6 +4,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
+export const dynamic = 'force-dynamic';
+
 export default function Settings() {
   const { authenticated, ready, smartAccountAddress, logout, user } = useAuth();
   const router = useRouter();

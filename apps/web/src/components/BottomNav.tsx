@@ -2,36 +2,75 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
+import { useSendModal } from "@/contexts/SendModalContext";
 
 const navItems = [
-  { name: "Home", path: "/", icon: "🏠" },
-  { name: "Dashboard", path: "/dashboard", icon: "📊" },
-  { name: "Settings", path: "/settings", icon: "⚙️" },
+  { id: "add-money", name: "Add money", path: "/home", icon: "/icons/money.svg", action: null },
+  { id: "move", name: "Move", path: null, icon: "/icons/move.svg", action: "send" },
+  { id: "more", name: "More", path: "/dashboard", icon: "/icons/more.svg", action: null },
 ];
 
 export function BottomNav() {
   const pathname = usePathname();
+  const { openSendModal } = useSendModal();
+
+  // Hide navigation on splash screen
+  if (pathname === "/") {
+    return null;
+  }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border safe-area-inset-bottom">
-      <div className="flex items-center justify-around h-16 max-w-2xl mx-auto px-4">
-        {navItems.map((item) => {
-          const isActive = pathname === item.path;
-          return (
-            <Link
-              key={item.path}
-              href={item.path}
-              className={`flex flex-col items-center justify-center gap-1 flex-1 h-full transition-colors ${
-                isActive
-                  ? "text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <span className="text-2xl">{item.icon}</span>
-              <span className="text-xs font-medium">{item.name}</span>
-            </Link>
-          );
-        })}
+    <nav className="fixed bottom-0 left-0 right-0 z-50 backdrop-blur-[11.85px] bg-black/[0.42] safe-area-inset-bottom w-full">
+      <div className="flex items-center justify-center px-[10px] py-4 w-full">
+        <div className="flex gap-[53px] items-center">
+          {navItems.map((item) => {
+            if (item.action === "send") {
+              return (
+                <button
+                  key={item.id}
+                  onClick={openSendModal}
+                  type="button"
+                  className="flex flex-col gap-1 items-center w-[53px] transition-opacity hover:opacity-80 cursor-pointer"
+                >
+                  <div className="w-[26px] h-[26px] relative">
+                    <Image
+                      src={item.icon}
+                      alt={item.name}
+                      width={26}
+                      height={26}
+                      className="block"
+                    />
+                  </div>
+                  <p className="text-[#f3f3f5] text-[10px] text-center leading-normal font-normal whitespace-nowrap font-sans">
+                    {item.name}
+                  </p>
+                </button>
+              );
+            }
+            
+            return (
+              <Link
+                key={item.id}
+                href={item.path!}
+                className="flex flex-col gap-1 items-center w-[53px] transition-opacity hover:opacity-80"
+              >
+                <div className="w-[26px] h-[26px] relative">
+                  <Image
+                    src={item.icon}
+                    alt={item.name}
+                    width={26}
+                    height={26}
+                    className="block"
+                  />
+                </div>
+                <p className="text-[#f3f3f5] text-[10px] text-center leading-normal font-normal whitespace-nowrap font-sans">
+                  {item.name}
+                </p>
+              </Link>
+            );
+          })}
+        </div>
       </div>
     </nav>
   );
