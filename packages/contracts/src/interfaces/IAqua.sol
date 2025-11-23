@@ -67,5 +67,37 @@ interface IAqua {
         address token0,
         address token1
     ) external view returns (uint256 balance0, uint256 balance1);
+
+    /**
+     * @notice Pull tokens from maker during swap
+     * @param maker Address of the liquidity provider
+     * @param strategyHash Hash of the strategy
+     * @param token Token address
+     * @param amount Amount to pull
+     * @param to Recipient address
+     */
+    function pull(
+        address maker,
+        bytes32 strategyHash,
+        address token,
+        uint256 amount,
+        address to
+    ) external;
+
+    /**
+     * @notice Push tokens to maker's strategy balance
+     * @param maker Address of the liquidity provider
+     * @param app Address of the AquaApp contract
+     * @param strategyHash Hash of the strategy
+     * @param token Token address
+     * @param amount Amount to push
+     */
+    function push(
+        address maker,
+        address app,
+        bytes32 strategyHash,
+        address token,
+        uint256 amount
+    ) external;
 }
 
