@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { TopNav } from "@/components/TopNav";
 import { BalanceDisplay } from "@/components/BalanceDisplay";
 import { StrategyCard } from "@/components/StrategyCard";
-import { TransactionsList } from "@/components/TransactionsList";
+import { PositionsList } from "@/components/PositionsList";
 import { QRModal } from "@/components/QRModal";
 import { SendModal } from "@/components/SendModal";
 import { useSendModal } from "@/contexts/SendModalContext";
@@ -76,8 +76,7 @@ export default function HomePage() {
   }
 
   const handleStrategyClick = () => {
-    // TODO: Navigate to strategy selection or open strategy modal
-    console.log("Open strategy selection");
+    router.push("/dashboard");
   };
 
   const handleSend = async (amount: string, toAddress: string) => {
@@ -99,9 +98,9 @@ export default function HomePage() {
         <StrategyCard onClick={handleStrategyClick} />
       </div>
 
-      {/* Transactions List - Same width as card above */}
+      {/* Positions List - Same width as card above */}
       <div className="px-3">
-        <TransactionsList />
+        <PositionsList userAddress={smartAccountAddress || undefined} />
       </div>
 
       {/* QR Modal */}

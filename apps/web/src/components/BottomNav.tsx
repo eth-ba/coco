@@ -8,7 +8,7 @@ import { useSendModal } from "@/contexts/SendModalContext";
 const navItems = [
   { id: "add-money", name: "Add money", path: "/home", icon: "/icons/money.svg", action: null },
   { id: "move", name: "Move", path: null, icon: "/icons/move.svg", action: "send" },
-  { id: "more", name: "More", path: "/dashboard", icon: "/icons/more.svg", action: null },
+  { id: "strategies", name: "Strategies", path: "/dashboard", icon: "/icons/more.svg", action: null },
 ];
 
 export function BottomNav() {

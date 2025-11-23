@@ -5,17 +5,21 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 
 interface TransactionSuccessProps {
-  isOpen: boolean;
-  amount: string;
-  toAddress: string;
+  isOpen?: boolean;  // Optional for simpler usage
+  amount?: string;
+  toAddress?: string;
+  title?: string;
+  message?: string;
   txHash?: string;
   onClose: () => void;
 }
 
 export function TransactionSuccess({
-  isOpen,
+  isOpen = true,  // Default to true for simpler usage
   amount,
   toAddress,
+  title,
+  message,
   txHash,
   onClose,
 }: TransactionSuccessProps) {
@@ -40,8 +44,8 @@ export function TransactionSuccess({
 
   const handleViewTransaction = () => {
     if (txHash) {
-      // Open Base Sepolia explorer
-      window.open(`https://sepolia.basescan.org/tx/${txHash}`, '_blank');
+      // Open Arc Testnet explorer
+      window.open(`https://testnet.arcscan.app/tx/${txHash}`, '_blank');
     }
   };
 
@@ -53,7 +57,9 @@ export function TransactionSuccess({
     <div className="fixed inset-0 bg-black z-[10000] flex flex-col animate-in fade-in duration-300">
       {/* Header */}
       <div className="flex items-center justify-center py-4 px-6">
-        <p className="text-[#a3a3a5] text-base font-medium">Send</p>
+        <p className="text-[#a3a3a5] text-base font-medium">
+          {title ? title.replace('!', '') : 'Send'}
+        </p>
       </div>
 
       {/* Content Card - Centered with equal spacing */}
@@ -127,48 +133,66 @@ export function TransactionSuccess({
             }
           `}</style>
 
-          {/* Transfer Success Title with fade-in */}
+          {/* Success Title with fade-in */}
           <h2 
-            className="text-white text-2xl font-medium mb-12 transition-all duration-500"
+            className="text-white text-2xl font-medium mb-4 transition-all duration-500"
             style={{
               opacity: showCheck ? 1 : 0,
               transform: showCheck ? 'translateY(0)' : 'translateY(10px)',
               transitionDelay: '0.6s',
             }}
           >
-            Transfer Success
+            {title || 'Transfer Success'}
           </h2>
 
-          {/* Amount Section with fade-in */}
-          <div 
-            className="flex flex-col items-center gap-2 mb-8 transition-all duration-500"
-            style={{
-              opacity: showCheck ? 1 : 0,
-              transform: showCheck ? 'translateY(0)' : 'translateY(10px)',
-              transitionDelay: '0.7s',
-            }}
-          >
-            <p className="text-[#a3a3a5] text-sm">Amount</p>
-            <p className="text-white text-[48px] font-medium leading-none">
-              {amount}
+          {/* Message with fade-in */}
+          {message && (
+            <p 
+              className="text-[#a3a3a5] text-[15px] text-center mb-8 px-4 transition-all duration-500"
+              style={{
+                opacity: showCheck ? 1 : 0,
+                transform: showCheck ? 'translateY(0)' : 'translateY(10px)',
+                transitionDelay: '0.65s',
+              }}
+            >
+              {message}
             </p>
-            <p className="text-[#a3a3a5] text-sm">USDC</p>
-          </div>
+          )}
 
-          {/* To Address with fade-in */}
-          <div 
-            className="flex flex-col items-center gap-1 mb-6 transition-all duration-500"
-            style={{
-              opacity: showCheck ? 1 : 0,
-              transform: showCheck ? 'translateY(0)' : 'translateY(10px)',
-              transitionDelay: '0.8s',
-            }}
-          >
-            <p className="text-white text-base">To:</p>
-            <p className="text-white text-base font-mono">
-              {truncateAddress(toAddress)}
-            </p>
-          </div>
+          {/* Amount Section with fade-in (only for send transactions) */}
+          {amount && (
+            <div 
+              className="flex flex-col items-center gap-2 mb-8 transition-all duration-500"
+              style={{
+                opacity: showCheck ? 1 : 0,
+                transform: showCheck ? 'translateY(0)' : 'translateY(10px)',
+                transitionDelay: '0.7s',
+              }}
+            >
+              <p className="text-[#a3a3a5] text-sm">Amount</p>
+              <p className="text-white text-[48px] font-medium leading-none">
+                {amount}
+              </p>
+              <p className="text-[#a3a3a5] text-sm">USDC</p>
+            </div>
+          )}
+
+          {/* To Address with fade-in (only for send transactions) */}
+          {toAddress && (
+            <div 
+              className="flex flex-col items-center gap-1 mb-6 transition-all duration-500"
+              style={{
+                opacity: showCheck ? 1 : 0,
+                transform: showCheck ? 'translateY(0)' : 'translateY(10px)',
+                transitionDelay: '0.8s',
+              }}
+            >
+              <p className="text-white text-base">To:</p>
+              <p className="text-white text-base font-mono">
+                {truncateAddress(toAddress)}
+              </p>
+            </div>
+          )}
 
           {/* View Transaction Link with fade-in */}
           {txHash && (

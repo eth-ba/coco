@@ -3,133 +3,20 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { DepositForm } from "@/components/DepositForm";
-import { WithdrawModal } from "@/components/WithdrawModal";
-import { useWithdraw } from "@/hooks/useWithdraw";
-import { formatUnits } from "viem";
-import { USDC_ADDRESS } from "@/lib/constants";
-import { useWallets } from "@privy-io/react-auth";
+import { useCreateStrategy } from "@/hooks/useCreateStrategy";
+import { TransactionSuccess } from "@/components/TransactionSuccess";
+import Image from "next/image";
 
 export const dynamic = 'force-dynamic';
 
-export default function Dashboard() {
+export default function Strategies() {
   const { authenticated, ready, smartAccountAddress, logout } = useAuth();
-  const { wallets } = useWallets();
   const router = useRouter();
-  const [usdcBalance, setUsdcBalance] = useState<string>("0");
-  const [ethBalance, setEthBalance] = useState<string>("0");
-  const [copied, setCopied] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
-  const [depositedAmount] = useState<string>("0");
-  
-  const { withdraw, isLoading: isWithdrawing } = useWithdraw();
+  const [amount, setAmount] = useState('');
+  const feeDisplay = '0.01'; // Display fee (hardcoded in contract)
+  const [showSuccess, setShowSuccess] = useState(false);
 
-  // Get USDC balance
-  useEffect(() => {
-    const fetchBalance = async () => {
-      // Wait for Privy to be ready before accessing wallets
-      if (!ready || !smartAccountAddress || !wallets.length) return;
-      
-      try {
-        const smartAccount = wallets.find((w) => w.walletClientType === 'privy');
-        if (!smartAccount) {
-          console.log('❌ No smart account found');
-          return;
-        }
-
-        console.log('🔍 Fetching USDC balance for:', smartAccountAddress);
-        console.log('📍 USDC Contract:', USDC_ADDRESS);
-        console.log('🌐 Network: Base Sepolia (Chain ID: 84532)');
-
-        const provider = await smartAccount.getEthereumProvider();
-        
-        // Check current chain
-        const chainId = await provider.request({ method: 'eth_chainId' });
-        console.log('⛓️ Current Chain ID:', chainId);
-        
-        // Get ETH balance
-        const ethBalanceHex = await provider.request({
-          method: 'eth_getBalance',
-          params: [smartAccountAddress, 'latest']
-        });
-        const ethBal = BigInt(ethBalanceHex as string);
-        const formattedEth = formatUnits(ethBal, 18);
-        console.log('💎 ETH Balance:', formattedEth, 'ETH');
-        setEthBalance(formattedEth);
-        
-        // ERC20 balanceOf call for USDC
-        const balanceHex = await provider.request({
-          method: 'eth_call',
-          params: [{
-            to: USDC_ADDRESS,
-            data: `0x70a08231000000000000000000000000${smartAccountAddress.slice(2)}` // balanceOf(address)
-          }, 'latest']
-        });
-
-        console.log('📊 USDC Balance (hex):', balanceHex);
-        const balance = BigInt(balanceHex as string);
-        const formattedBalance = formatUnits(balance, 6);
-        console.log('💰 USDC Balance (formatted):', formattedBalance, 'USDC');
-        
-        setUsdcBalance(formattedBalance);
-      } catch (error) {
-        console.error('❌ Error fetching USDC balance:', error);
-      }
-    };
-
-    fetchBalance();
-    const interval = setInterval(fetchBalance, 10000); // Refresh every 10s
-    return () => clearInterval(interval);
-  }, [ready, smartAccountAddress, wallets]);
-
-  const copyAddress = () => {
-    if (smartAccountAddress) {
-      navigator.clipboard.writeText(smartAccountAddress);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
-  const refreshBalance = async () => {
-    setIsRefreshing(true);
-    if (!ready || !smartAccountAddress || !wallets.length) {
-      setIsRefreshing(false);
-      return;
-    }
-    
-    try {
-      const smartAccount = wallets.find((w) => w.walletClientType === 'privy');
-      if (!smartAccount) return;
-
-      const provider = await smartAccount.getEthereumProvider();
-      
-      const balanceHex = await provider.request({
-        method: 'eth_call',
-        params: [{
-          to: USDC_ADDRESS,
-          data: `0x70a08231000000000000000000000000${smartAccountAddress.slice(2)}`
-        }, 'latest']
-      });
-
-      const balance = BigInt(balanceHex as string);
-      setUsdcBalance(formatUnits(balance, 6));
-    } catch (error) {
-      console.error('Error refreshing balance:', error);
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
-
-  const handleWithdraw = async (amount: string) => {
-    const result = await withdraw(amount);
-    if (result?.success) {
-      // Refresh balances after successful withdrawal
-      await refreshBalance();
-      // TODO: Refresh deposited amount from Aqua Protocol
-    }
-    return result;
-  };
+  const { createStrategy, isLoading, error, txHash, currentStep } = useCreateStrategy();
 
   useEffect(() => {
     if (ready && !authenticated) {
@@ -137,111 +24,263 @@ export default function Dashboard() {
     }
   }, [ready, authenticated, router]);
 
+  useEffect(() => {
+    if (txHash && !isLoading) {
+      setShowSuccess(true);
+    }
+  }, [txHash, isLoading]);
+
   if (!ready || !authenticated) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">Loading dashboard...</p>
+      <div className="flex min-h-screen items-center justify-center bg-black">
+        <p className="text-[#a3a3a5]">Loading...</p>
       </div>
     );
   }
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!amount || parseFloat(amount) <= 0) {
+      return;
+    }
+
+    const result = await createStrategy(amount, feeDisplay);
+    
+    if (result?.success) {
+      console.log('✅ Strategy created successfully!');
+      setAmount('');
+    }
+  };
+
+  const handleSuccessClose = () => {
+    setShowSuccess(false);
+    router.push('/home');
+  };
+
+  if (showSuccess && txHash) {
+    return (
+      <TransactionSuccess
+        txHash={txHash}
+        onClose={handleSuccessClose}
+        title="Strategy Created!"
+        message="Your flash loan strategy is now active and ready to earn fees"
+      />
+    );
+  }
+
+  const handleCopyAddress = async () => {
+    if (smartAccountAddress) {
+      await navigator.clipboard.writeText(smartAccountAddress);
+      // Could add a toast notification here
+      console.log('✅ Address copied to clipboard');
+    }
+  };
+
+  const formatAddress = (address: string) => {
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
   return (
-    <div className="flex min-h-screen flex-col px-6 pt-8 pb-24">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
+    <div className="min-h-screen bg-black flex flex-col pb-24 overflow-x-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between px-6 pt-8 pb-6">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.push("/home")}
+            className="w-6 h-6 transition-opacity hover:opacity-70"
+          >
+            <Image
+              src="/icons/back.svg"
+              alt="Back"
+              width={24}
+              height={24}
+              className="w-full h-full"
+            />
+          </button>
+          <h1 className="text-[28px] font-medium text-white">Create Strategy</h1>
+        </div>
         <button
           onClick={logout}
-          className="text-sm text-muted-foreground hover:text-foreground"
+          className="text-sm text-[#a3a3a5] hover:text-white transition-colors"
         >
           Sign Out
         </button>
       </div>
 
-      <div className="flex flex-col gap-6">
-        {/* Smart Account Info with Copy */}
-        <div className="rounded-2xl bg-primary/5 p-4 border border-primary/10">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-xs font-medium text-primary uppercase tracking-wider">
-              Your Coco Account
+      {/* Wallet Address Card */}
+      <div className="px-3 mb-4">
+        <div className="rounded-2xl bg-[#1c1c1e] p-4 flex items-center justify-between">
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] text-[#a3a3a5] mb-1 font-medium uppercase tracking-wider">
+              Your Wallet
             </p>
-            <button
-              onClick={copyAddress}
-              className="text-xs px-3 py-1 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-            >
-              {copied ? "✓ Copied!" : "Copy Address"}
-            </button>
-          </div>
-          <p className="text-xs font-mono break-all text-muted-foreground">
-            {smartAccountAddress || "Generating account..."}
-          </p>
-        </div>
-
-        {/* Balance Cards */}
-        <div className="flex flex-col gap-4">
-          <div className="rounded-2xl bg-secondary p-6">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">USDC Balance</p>
-              <button
-                onClick={refreshBalance}
-                disabled={isRefreshing}
-                className="text-xs px-2 py-1 rounded bg-primary/10 hover:bg-primary/20 transition-colors disabled:opacity-50"
-              >
-                {isRefreshing ? "⟳" : "🔄"} Refresh
-              </button>
-            </div>
-            <p className="text-4xl font-bold">{parseFloat(usdcBalance).toFixed(2)} USDC</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Available to deposit • Base Sepolia
-            </p>
-            <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-muted">
-              ETH: {parseFloat(ethBalance).toFixed(4)} ETH (for gas)
+            <p className="text-[15px] text-white font-mono truncate">
+              {smartAccountAddress ? formatAddress(smartAccountAddress) : 'Loading...'}
             </p>
           </div>
-          <div className="rounded-2xl bg-secondary p-6">
-            <p className="text-sm text-muted-foreground mb-2">Current APY</p>
-            <p className="text-2xl font-bold text-green-500">8.50%</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Simple Vault Strategy
-            </p>
-          </div>
-          <div className="rounded-2xl bg-secondary p-6">
-            <p className="text-sm text-muted-foreground mb-2">
-              Deposited Amount
-            </p>
-            <p className="text-2xl font-bold">${parseFloat(depositedAmount).toFixed(2)}</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Earning yield via Aqua
-            </p>
-          </div>
-        </div>
-
-        {/* Withdraw Button */}
-        <div className="mt-6">
           <button
-            onClick={() => setIsWithdrawModalOpen(true)}
-            className="w-full px-6 py-4 bg-linear-to-r from-red-500 to-pink-500 text-white rounded-2xl font-semibold hover:from-red-600 hover:to-pink-600 transition-all shadow-lg shadow-red-500/25 flex items-center justify-center gap-2"
+            onClick={handleCopyAddress}
+            className="ml-3 w-9 h-9 rounded-lg bg-[#2c2c2e] flex items-center justify-center transition-opacity hover:opacity-70 flex-shrink-0"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            Withdraw Funds
+            <Image
+              src="/icons/copy.svg"
+              alt="Copy address"
+              width={18}
+              height={18}
+            />
           </button>
-        </div>
-
-        {/* Deposit Form */}
-        <div className="mt-4">
-          <DepositForm />
         </div>
       </div>
 
-      {/* Withdraw Modal */}
-      <WithdrawModal
-        isOpen={isWithdrawModalOpen}
-        onClose={() => setIsWithdrawModalOpen(false)}
-        onWithdraw={handleWithdraw}
-        currentBalance={depositedAmount}
-        isLoading={isWithdrawing}
-      />
+      {/* Info Card */}
+      <div className="px-3 mb-6">
+        <div className="rounded-2xl bg-[#1c1c1e] p-5">
+          <p className="text-[11px] font-semibold text-[#a3a3a5] uppercase tracking-wider mb-2">
+            FLASH LOAN STRATEGY
+          </p>
+          <p className="text-[15px] text-[#d1d1d6] leading-[20px]">
+            Provide liquidity to earn fees when others borrow your USDC via flash loans. Your funds remain in Aqua Protocol and earn passive income.
+          </p>
+        </div>
+      </div>
+
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4 px-3">
+        {/* Amount Input */}
+        <div className="rounded-2xl bg-[#1c1c1e] p-6 overflow-hidden">
+          <label className="text-[13px] text-[#a3a3a5] mb-3 block font-medium">
+            Liquidity Amount
+          </label>
+          <div className="flex items-baseline gap-2 mb-2 w-full">
+            <span className="text-white text-[32px] font-normal flex-shrink-0">$</span>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="0.00"
+              className="flex-1 min-w-0 bg-transparent text-white text-[32px] font-normal outline-none placeholder:text-[#48484a]"
+              disabled={isLoading}
+            />
+            <span className="text-[#a3a3a5] text-[17px] font-medium flex-shrink-0">
+              USDC
+            </span>
+          </div>
+          <p className="text-[11px] text-[#a3a3a5]">
+            Minimum: 1 USDC • Available on Arc Testnet
+          </p>
+        </div>
+
+        {/* Fee Display (Hardcoded) */}
+        <div className="rounded-2xl bg-[#1c1c1e] p-6 overflow-hidden">
+          <label className="text-[13px] text-[#a3a3a5] mb-3 block font-medium">
+            Flash Loan Fee (%)
+          </label>
+          <div className="flex items-baseline gap-2 mb-2 w-full">
+            <input
+              type="text"
+              value={feeDisplay}
+              readOnly
+              disabled
+              className="flex-1 min-w-0 bg-transparent text-white/60 text-[32px] font-normal outline-none cursor-not-allowed"
+            />
+            <span className="text-[#a3a3a5] text-[17px] font-medium flex-shrink-0">
+              %
+            </span>
+          </div>
+          <div className="flex items-start gap-2 mt-3 pt-3 border-t border-[#48484a]/20">
+            <span className="text-[#ffa800] text-[11px] mt-0.5 flex-shrink-0">⚠️</span>
+            <p className="text-[11px] text-[#ffa800] leading-[14px]">
+              Note: Fee is currently hardcoded at 0.01% in the smart contract. This input is for UI preview only.
+            </p>
+          </div>
+        </div>
+
+        {/* Strategy Details */}
+        <div className="rounded-2xl bg-[#1c1c1e] p-6">
+          <p className="text-[13px] text-[#a3a3a5] mb-4 font-medium">Strategy Details</p>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-[15px] text-[#a3a3a5]">Contract</span>
+              <span className="text-[15px] text-white font-mono">FlashLoan</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-[15px] text-[#a3a3a5]">Protocol</span>
+              <span className="text-[15px] text-white font-mono">Aqua</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-[15px] text-[#a3a3a5]">Token</span>
+              <span className="text-[15px] text-white font-mono">USDC</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-[15px] text-[#a3a3a5]">Network</span>
+              <span className="text-[15px] text-white font-mono">Arc Testnet</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Error Display */}
+        {error && (
+          <div className="rounded-2xl bg-[#ff3b30]/10 border border-[#ff3b30]/20 p-4">
+            <p className="text-[13px] text-[#ff3b30] leading-[17px]">{error}</p>
+          </div>
+        )}
+
+        {/* Transaction Progress */}
+        {isLoading && (
+          <div className="rounded-2xl bg-[#1c1c1e] p-5">
+            <p className="text-[11px] text-[#a3a3a5] mb-3 font-medium uppercase tracking-wider">
+              Transaction Progress
+            </p>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className={`w-2 h-2 rounded-full ${currentStep === 1 ? 'bg-[#007aff] animate-pulse' : currentStep > 1 ? 'bg-[#34c759]' : 'bg-[#48484a]'}`} />
+                <span className={`text-[13px] ${currentStep >= 1 ? 'text-white' : 'text-[#a3a3a5]'}`}>
+                  1. Registering strategy{currentStep > 1 && ' ✓'}
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className={`w-2 h-2 rounded-full ${currentStep === 2 ? 'bg-[#007aff] animate-pulse' : currentStep > 2 ? 'bg-[#34c759]' : 'bg-[#48484a]'}`} />
+                <span className={`text-[13px] ${currentStep >= 2 ? 'text-white' : 'text-[#a3a3a5]'}`}>
+                  2. Approving USDC{currentStep > 2 && ' ✓'}
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className={`w-2 h-2 rounded-full ${currentStep === 3 ? 'bg-[#007aff] animate-pulse' : currentStep > 3 ? 'bg-[#34c759]' : 'bg-[#48484a]'}`} />
+                <span className={`text-[13px] ${currentStep >= 3 ? 'text-white' : 'text-[#a3a3a5]'}`}>
+                  3. Shipping liquidity{currentStep > 3 && ' ✓'}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Create Button */}
+        <button
+          type="submit"
+          disabled={isLoading || !amount || parseFloat(amount) <= 0}
+          className="w-full mt-2 px-6 py-4 bg-white text-black rounded-[14px] text-[17px] font-semibold hover:bg-white/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          {isLoading ? (
+            <>
+              <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              Creating Strategy...
+            </>
+          ) : (
+            <>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Create Strategy
+            </>
+          )}
+        </button>
+      </form>
     </div>
   );
 }

@@ -1,13 +1,9 @@
 import { encodeFunctionData, encodeAbiParameters, keccak256 } from 'viem';
 
-// Aqua Protocol contract address (same across all chains)
-export const AQUA_CONTRACT = '0x499943e74fb0ce105688beee8ef2abec5d936d31' as const;
-
-// Base Sepolia USDC address
-export const USDC_ADDRESS = '0x036CbD53842c5426634e7929541eC2318f3dCF7e' as const;
-
-// YieldAutomator contract address (Base Sepolia)
-export const YIELD_AUTOMATOR_ADDRESS = '0xA802994c344d3e9635277C6bD6475ce901edbB9e' as const;
+// Arc Testnet Contract Addresses
+export const AQUA_CONTRACT = '0x33Fb47472D03Ce0174830A6bD21e39F65d6d5425' as const;
+export const USDC_ADDRESS = '0x3600000000000000000000000000000000000000' as const;
+export const FLASH_LOAN_ADDRESS = '0x6c86812F1a5aeb738951B6f8A0b3b3FB4C856f82' as const;
 
 // ERC20 ABI for approve function
 const erc20Abi = [

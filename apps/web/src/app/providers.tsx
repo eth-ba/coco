@@ -1,7 +1,7 @@
 "use client";
 
 import { PrivyProvider } from "@privy-io/react-auth";
-import { baseSepolia } from "viem/chains";
+import { arcTestnet } from "@/lib/chains";
 import { SendModalProvider } from "@/contexts/SendModalContext";
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -9,18 +9,17 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <PrivyProvider
       appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID || ""}
       config={{
-        loginMethods: ["email"],
+        loginMethods: ["email", "wallet"],
         appearance: {
           theme: "light",
           accentColor: "#676FFF",
         },
         embeddedWallets: {
-          ethereum: {
-            createOnLogin: "users-without-wallets",
-          },
+          createOnLogin: "users-without-wallets",
+          requireUserPasswordOnCreate: false,
         },
-        defaultChain: baseSepolia,
-        supportedChains: [baseSepolia],
+        defaultChain: arcTestnet,
+        supportedChains: [arcTestnet],
       }}
     >
       <SendModalProvider>

@@ -1,20 +1,30 @@
 /**
  * Contract addresses for Coco platform
+ * Network: Arc Testnet (Chain ID: 5042002)
+ * RPC: https://arc-testnet.drpc.org
+ * Explorer: https://testnet.arcscan.app
  */
 
-// Base Sepolia Testnet
-export const YIELD_AUTOMATOR_ADDRESS = '0xA802994c344d3e9635277C6bD6475ce901edbB9e' as const;
-export const SIMPLE_AQUA_APP_ADDRESS = '0x9c5f1fc4EF27A5816e7F56f60AA076379aF05331' as const;
-export const AQUA_PROTOCOL_ADDRESS = '0x499943E74FB0cE105688beeE8Ef2ABec5D936d31' as const;
-export const USDC_ADDRESS = '0x036CbD53842c5426634e7929541eC2318f3dCF7e' as const;
+// Arc Testnet - Flash Loan Contracts
+export const AQUA_PROTOCOL_ADDRESS = '0x33Fb47472D03Ce0174830A6bD21e39F65d6d5425' as const;
+export const FLASH_LOAN_ADDRESS = '0x6c86812F1a5aeb738951B6f8A0b3b3FB4C856f82' as const;
+export const FLASH_LOAN_BORROWER_ADDRESS = '0x524902FA5e3535117E24e9D6826e5950bfbEF94E' as const;
+
+// Arc Testnet Native USDC (used for gas and transfers)
+export const USDC_ADDRESS = '0x3600000000000000000000000000000000000000' as const;
 
 // Chain ID
-export const BASE_SEPOLIA_CHAIN_ID = 84532;
+export const ARC_TESTNET_CHAIN_ID = 5042002;
+
+// Legacy addresses (not deployed on Arc Testnet yet)
+// These are here for backwards compatibility with existing hooks
+export const YIELD_AUTOMATOR_ADDRESS = '0x0000000000000000000000000000000000000000' as const; // Not deployed
+export const SIMPLE_AQUA_APP_ADDRESS = '0x0000000000000000000000000000000000000000' as const; // Not deployed
 
 // Strategy indices
 export const SIMPLE_VAULT_STRATEGY = 0; // SimpleAquaApp strategy index
 
-// Re-export Aqua utilities
+// Re-export Aqua utility functions
 export { 
   buildDockTransaction, 
   calculateStrategyHash,

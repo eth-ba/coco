@@ -8,7 +8,7 @@ import { parseUnits } from 'viem';
 import { QRScanner } from './QRScanner';
 import { AddressBook } from './AddressBook';
 import { TransactionSuccess } from './TransactionSuccess';
-import { USDC_ADDRESS, BASE_SEPOLIA_CHAIN_ID } from '@/lib/constants';
+import { USDC_ADDRESS, ARC_TESTNET_CHAIN_ID } from '@/lib/constants';
 
 interface SendModalProps {
   isOpen: boolean;
@@ -111,7 +111,7 @@ export function SendModal({
         throw new Error('No smart account found');
       }
 
-      await smartAccount.switchChain(BASE_SEPOLIA_CHAIN_ID);
+      await smartAccount.switchChain(ARC_TESTNET_CHAIN_ID);
       const provider = await smartAccount.getEthereumProvider();
 
       // Convert amount to USDC units (6 decimals)
