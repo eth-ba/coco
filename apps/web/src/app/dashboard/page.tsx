@@ -15,6 +15,7 @@ export default function Strategies() {
   const [amount, setAmount] = useState('');
   const feeDisplay = '0.01'; // Display fee (hardcoded in contract)
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
 
   const { createStrategy, isLoading, error, txHash, currentStep } = useCreateStrategy();
 
@@ -84,139 +85,147 @@ export default function Strategies() {
   return (
     <div className="min-h-screen bg-black flex flex-col pb-24 overflow-x-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 pt-8 pb-6">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-end px-3 pt-6 pb-4 relative">
+        {/* Wallet Address Badge - Clickable with Dropdown */}
+        <div className="relative">
           <button
-            onClick={() => router.push("/home")}
-            className="w-6 h-6 transition-opacity hover:opacity-70"
+            onClick={() => setShowDropdown(!showDropdown)}
+            className="flex items-center gap-2 bg-[#1c1c1e] rounded-full pl-3 pr-1 py-1 transition-opacity hover:opacity-70"
           >
-            <Image
-              src="/icons/back.svg"
-              alt="Back"
-              width={24}
-              height={24}
-              className="w-full h-full"
-            />
-          </button>
-          <h1 className="text-[28px] font-medium text-white">Create Strategy</h1>
-        </div>
-        <button
-          onClick={logout}
-          className="text-sm text-[#a3a3a5] hover:text-white transition-colors"
-        >
-          Sign Out
-        </button>
-      </div>
-
-      {/* Wallet Address Card */}
-      <div className="px-3 mb-4">
-        <div className="rounded-2xl bg-[#1c1c1e] p-4 flex items-center justify-between">
-          <div className="flex-1 min-w-0">
-            <p className="text-[11px] text-[#a3a3a5] mb-1 font-medium uppercase tracking-wider">
-              Your Wallet
-            </p>
-            <p className="text-[15px] text-white font-mono truncate">
+            <span className="text-white text-[13px] font-mono">
               {smartAccountAddress ? formatAddress(smartAccountAddress) : 'Loading...'}
-            </p>
-          </div>
-          <button
-            onClick={handleCopyAddress}
-            className="ml-3 w-9 h-9 rounded-lg bg-[#2c2c2e] flex items-center justify-center transition-opacity hover:opacity-70 flex-shrink-0"
-          >
-            <Image
-              src="/icons/copy.svg"
-              alt="Copy address"
-              width={18}
-              height={18}
-            />
+            </span>
+            {/* Avatar Circle */}
+            <div className="w-7 h-7 rounded-full bg-[#3a3a3c] flex items-center justify-center shrink-0">
+              <span className="text-white text-[11px] font-semibold">
+                {smartAccountAddress ? smartAccountAddress.slice(2, 4).toUpperCase() : '??'}
+              </span>
+            </div>
           </button>
+
+          {/* Dropdown Menu */}
+          {showDropdown && (
+            <>
+              {/* Backdrop to close dropdown */}
+              <div 
+                className="fixed inset-0 z-10" 
+                onClick={() => setShowDropdown(false)}
+              />
+              
+              {/* Dropdown Content */}
+              <div className="absolute right-0 mt-2 w-48 bg-[#1c1c1e] rounded-2xl overflow-hidden shadow-lg z-20">
+                <button
+                  onClick={() => {
+                    handleCopyAddress();
+                    setShowDropdown(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-white hover:bg-[#2c2c2e] transition-colors"
+                >
+                  <Image
+                    src="/icons/copy.svg"
+                    alt="Copy"
+                    width={16}
+                    height={16}
+                  />
+                  <span className="text-[15px]">Copy Address</span>
+                </button>
+                
+                <div className="h-px bg-[#48484a]/20" />
+                
+                <button
+                  onClick={() => {
+                    logout();
+                    setShowDropdown(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-[#ff3b30] hover:bg-[#2c2c2e] transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  <span className="text-[15px]">Sign Out</span>
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
-      {/* Info Card */}
+      {/* Title & Description */}
       <div className="px-3 mb-6">
-        <div className="rounded-2xl bg-[#1c1c1e] p-5">
-          <p className="text-[11px] font-semibold text-[#a3a3a5] uppercase tracking-wider mb-2">
-            FLASH LOAN STRATEGY
-          </p>
-          <p className="text-[15px] text-[#d1d1d6] leading-[20px]">
-            Provide liquidity to earn fees when others borrow your USDC via flash loans. Your funds remain in Aqua Protocol and earn passive income.
-          </p>
-        </div>
+        <h1 className="text-white text-[34px] font-semibold leading-[41px] tracking-tight mb-2">
+          Create Strategy
+        </h1>
+        <p className="text-[#a3a3a5] text-[12px] leading-[16px]">
+          Provide liquidity to earn fees when others borrow your USDC via flash loans. 
+        </p>
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 px-3">
-        {/* Amount Input */}
-        <div className="rounded-2xl bg-[#1c1c1e] p-6 overflow-hidden">
-          <label className="text-[13px] text-[#a3a3a5] mb-3 block font-medium">
-            Liquidity Amount
-          </label>
-          <div className="flex items-baseline gap-2 mb-2 w-full">
-            <span className="text-white text-[32px] font-normal flex-shrink-0">$</span>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="0.00"
-              className="flex-1 min-w-0 bg-transparent text-white text-[32px] font-normal outline-none placeholder:text-[#48484a]"
-              disabled={isLoading}
-            />
-            <span className="text-[#a3a3a5] text-[17px] font-medium flex-shrink-0">
-              USDC
-            </span>
+      <form onSubmit={handleSubmit} className="flex flex-col px-3">
+        {/* Main Input Sections - 12px gap */}
+        <div className="flex flex-col gap-3 mb-4">
+          {/* Amount Input */}
+          <div className="rounded-2xl bg-[#1c1c1e] p-6 overflow-hidden">
+            <label className="text-[13px] text-[#a3a3a5] mb-3 block font-medium">
+              Liquidity Amount
+            </label>
+            <div className="flex items-baseline gap-2 w-full">
+              <span className="text-white text-[32px] font-normal shrink-0">$</span>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="0.00"
+                className="flex-1 min-w-0 bg-transparent text-white text-[32px] font-normal outline-none placeholder:text-[#48484a]"
+                disabled={isLoading}
+              />
+              <span className="text-[#a3a3a5] text-[17px] font-medium shrink-0">
+                USDC
+              </span>
+            </div>
           </div>
-          <p className="text-[11px] text-[#a3a3a5]">
-            Minimum: 1 USDC • Available on Arc Testnet
-          </p>
-        </div>
 
-        {/* Fee Display (Hardcoded) */}
-        <div className="rounded-2xl bg-[#1c1c1e] p-6 overflow-hidden">
-          <label className="text-[13px] text-[#a3a3a5] mb-3 block font-medium">
-            Flash Loan Fee (%)
-          </label>
-          <div className="flex items-baseline gap-2 mb-2 w-full">
-            <input
-              type="text"
-              value={feeDisplay}
-              readOnly
-              disabled
-              className="flex-1 min-w-0 bg-transparent text-white/60 text-[32px] font-normal outline-none cursor-not-allowed"
-            />
-            <span className="text-[#a3a3a5] text-[17px] font-medium flex-shrink-0">
-              %
-            </span>
+          {/* Fee Display (Hardcoded) */}
+          <div className="rounded-2xl bg-[#1c1c1e] p-6 overflow-hidden">
+            <label className="text-[13px] text-[#a3a3a5] mb-3 block font-medium">
+              Flash Loan Fee (%)
+            </label>
+            <div className="flex items-baseline gap-2 w-full">
+              <input
+                type="text"
+                value={feeDisplay}
+                readOnly
+                disabled
+                className="flex-1 min-w-0 bg-transparent text-white/60 text-[32px] font-normal outline-none cursor-not-allowed"
+              />
+              <span className="text-[#a3a3a5] text-[17px] font-medium shrink-0">
+                %
+              </span>
+            </div>
           </div>
-          <div className="flex items-start gap-2 mt-3 pt-3 border-t border-[#48484a]/20">
-            <span className="text-[#ffa800] text-[11px] mt-0.5 flex-shrink-0">⚠️</span>
-            <p className="text-[11px] text-[#ffa800] leading-[14px]">
-              Note: Fee is currently hardcoded at 0.01% in the smart contract. This input is for UI preview only.
-            </p>
-          </div>
-        </div>
 
-        {/* Strategy Details */}
-        <div className="rounded-2xl bg-[#1c1c1e] p-6">
-          <p className="text-[13px] text-[#a3a3a5] mb-4 font-medium">Strategy Details</p>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-[15px] text-[#a3a3a5]">Contract</span>
-              <span className="text-[15px] text-white font-mono">FlashLoan</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-[15px] text-[#a3a3a5]">Protocol</span>
-              <span className="text-[15px] text-white font-mono">Aqua</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-[15px] text-[#a3a3a5]">Token</span>
-              <span className="text-[15px] text-white font-mono">USDC</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-[15px] text-[#a3a3a5]">Network</span>
-              <span className="text-[15px] text-white font-mono">Arc Testnet</span>
+          {/* Strategy Details */}
+          <div className="rounded-2xl bg-[#1c1c1e] p-6">
+            <p className="text-[13px] text-[#a3a3a5] mb-4 font-medium">Strategy Details</p>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-[15px] text-[#a3a3a5]">Contract</span>
+                <span className="text-[15px] text-white font-mono">FlashLoan</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[15px] text-[#a3a3a5]">Protocol</span>
+                <span className="text-[15px] text-white font-mono">Aqua</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[15px] text-[#a3a3a5]">Token</span>
+                <span className="text-[15px] text-white font-mono">USDC</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[15px] text-[#a3a3a5]">Network</span>
+                <span className="text-[15px] text-white font-mono">Arc Testnet</span>
+              </div>
             </div>
           </div>
         </div>

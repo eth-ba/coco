@@ -16,7 +16,7 @@ export function BalanceDisplay({ balance }: BalanceDisplayProps) {
   const cents = parts[1] || "00";
 
   return (
-    <div className="flex flex-col items-center justify-center gap-4 pt-4 pb-8 mb-8">
+    <div className="flex flex-col items-center justify-center gap-4 pt-4 pb-8 mb-4">
       {/* Account Balance Label */}
       <p className="text-[#a3a3a5] text-base font-medium">
         Account Balance
@@ -50,6 +50,11 @@ export function BalanceDisplay({ balance }: BalanceDisplayProps) {
             className="w-full h-full"
           />
         </button>
+      </div>
+
+      {/* APY Badge */}
+      <div className="px-2.5 py-1 bg-[#abff71]/30 rounded-[19px] outline-1 -outline-offset-1 outline-[#abff71] inline-flex justify-center items-center gap-2.5">
+        <div className="text-white text-xs font-medium leading-[17.40px]">6% APY</div>
       </div>
     </div>
   );
