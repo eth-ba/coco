@@ -2,6 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {Script, console} from "forge-std/Script.sol";
+import {Test} from "forge-std/Test.sol";
 import {FlashLoan} from "../src/FlashLoan.sol";
 import {FlashLoanBorrower} from "../src/FlashLoanBorrower.sol";
 import {IAqua} from "../src/interfaces/IAqua.sol";
@@ -18,8 +19,8 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * 2. Run script:
  *    forge script script/LocalSetup.s.sol:LocalSetup --rpc-url http://localhost:8545 --broadcast
  */
-contract LocalSetup is Script {
-    address constant AQUA_ADDRESS = 0x499943e74fb0ce105688beee8ef2abec5d936d31;
+contract LocalSetup is Script, Test {
+    address constant AQUA_ADDRESS = 0x499943E74FB0cE105688beeE8Ef2ABec5D936d31;
     
     function getUSDCAddress() internal view returns (address) {
         if (block.chainid == 1) return 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48; // Ethereum mainnet
@@ -110,6 +111,10 @@ contract LocalSetup is Script {
         
         console.log("Lender shipped", initialLiquidity / 1e6, "USDC to Aqua");
         
+        // Register strategy for EIP-3156 discovery
+        flashLoan.registerStrategy(strategy);
+        console.log("Strategy registered for EIP-3156");
+        
         vm.stopPrank();
         
         console.log("\n=== Deployment Complete ===");
@@ -117,7 +122,7 @@ contract LocalSetup is Script {
         console.log("USDC_ADDRESS=%s", address(usdc));
         console.log("FLASH_LOAN_ADDRESS=%s", address(flashLoan));
         console.log("BORROWER_CONTRACT_ADDRESS=%s", address(borrower));
-        console.log("\n✅ Ready to test flash loans with Aqua Protocol");
+        console.log("\n[READY] Ready to test flash loans with Aqua Protocol");
     }
 }
 

@@ -32,7 +32,7 @@ import {IAqua} from "../src/interfaces/IAqua.sol";
  *   --verify
  */
 contract DeployTestnet is Script {
-    address constant AQUA_ADDRESS = 0x499943e74fb0ce105688beee8ef2abec5d936d31;
+    address constant AQUA_ADDRESS = 0x499943E74FB0cE105688beeE8Ef2ABec5D936d31;
     
     function run() external returns (
         FlashLoan flashLoan,
@@ -71,8 +71,13 @@ contract DeployTestnet is Script {
         console.log("2. Ship liquidity to flash loan app:");
         console.log("   aqua.ship(%s, strategy, [token], [amount])", address(flashLoan));
         console.log("");
-        console.log("3. Borrowers can now call:");
-        console.log("   flashLoan.flashLoan(strategy, amount, data)");
+        console.log("3. Register strategy for EIP-3156 discovery:");
+        console.log("   flashLoan.registerStrategy(strategy)");
+        console.log("");
+        console.log("4. Borrowers can now call:");
+        console.log("   flashLoan.flashLoanWithStrategy(receiver, strategy, amount, data)");
+        console.log("   OR use EIP-3156 interface:");
+        console.log("   flashLoan.flashLoan(receiver, token, amount, data)");
     }
 }
 

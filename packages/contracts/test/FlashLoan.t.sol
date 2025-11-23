@@ -9,7 +9,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @title FlashLoanTest
- * @notice Test flash loans with REAL Aqua Protocol on forked mainnet
+ * @notice Test flash loans with Aqua Protocol on forked mainnet
  * @dev Must be run with a forked network
  * 
  * Usage:
@@ -19,7 +19,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * forge test -vv
  */
 contract FlashLoanTest is Test {
-    // Real Aqua Protocol (same address on all mainnets)
+    // Aqua Protocol (same address on all mainnets)
     address constant AQUA_ADDRESS = 0x499943E74FB0cE105688beeE8Ef2ABec5D936d31;
     
     // USDC address (auto-detected based on chain ID)
@@ -58,12 +58,11 @@ contract FlashLoanTest is Test {
             revert("Unsupported chain");
         }
         
-        // Use REAL contracts
         aqua = IAqua(AQUA_ADDRESS);
         usdc = IERC20(USDC_ADDRESS);
         
-        console.log("Using REAL Aqua at:", address(aqua));
-        console.log("Using REAL USDC at:", address(usdc));
+        console.log("Using Aqua at:", address(aqua));
+        console.log("Using USDC at:", address(usdc));
         console.log("Chain ID:", block.chainid);
         
         // Create test accounts
@@ -89,7 +88,7 @@ contract FlashLoanTest is Test {
         deal(address(usdc), address(borrower), 100 * 1e6);
         console.log("Gave borrower 100 USDC for fees");
         
-        // Setup lender's strategy with REAL Aqua
+        // Setup lender's strategy with Aqua
         vm.startPrank(lender);
         
         console.log("\n--- Approving USDC to Aqua ---");
@@ -111,7 +110,6 @@ contract FlashLoanTest is Test {
         console.log("\n--- Shipping liquidity to Aqua ---");
         console.log("Lender USDC balance before ship:", usdc.balanceOf(lender) / 1e6, "USDC");
         
-        // Ship to REAL Aqua Protocol!
         aqua.ship(
             address(flashLoan),
             abi.encode(strategy),
@@ -121,14 +119,18 @@ contract FlashLoanTest is Test {
         
         console.log("Lender USDC balance after ship:", usdc.balanceOf(lender) / 1e6, "USDC");
         
+        console.log("\n--- Registering strategy for EIP-3156 ---");
+        flashLoan.registerStrategy(strategy);
+        console.log("Strategy registered");
+        
         vm.stopPrank();
         
-        console.log("Lender shipped", INITIAL_LIQUIDITY / 1e6, "USDC to REAL Aqua");
+        console.log("Lender shipped", INITIAL_LIQUIDITY / 1e6, "USDC to Aqua");
         console.log("\n=== Setup Complete ===\n");
     }
     
     function testFlashLoan() public {
-        console.log("=== Testing Flash Loan with REAL Aqua ===");
+        console.log("=== Testing Flash Loan with Aqua ===");
         
         FlashLoan.Strategy memory strategy = FlashLoan.Strategy({
             maker: lender,
@@ -191,11 +193,11 @@ contract FlashLoanTest is Test {
         console.log("Expected fees (microUSDC):", expectedFee);
         
         assertEq(totalProfit, expectedFee, "Profit should match expected fees");
-        console.log("\n[PASS] All flash loans successful with REAL Aqua!");
+        console.log("\n[PASS] All flash loans successful with Aqua");
     }
     
     function testInsufficientLiquidity() public {
-        console.log("\n=== Testing Insufficient Liquidity with REAL Aqua ===");
+        console.log("\n=== Testing Insufficient Liquidity with Aqua ===");
         
         FlashLoan.Strategy memory strategy = FlashLoan.Strategy({
             maker: lender,
@@ -223,6 +225,42 @@ contract FlashLoanTest is Test {
         
         assertEq(fee, expectedFee, "Fee calculation should be correct");
         console.log("[PASS] Fee calculation correct");
+    }
+    
+    function testEIP3156MaxFlashLoan() public view {
+        console.log("\n=== Testing EIP-3156: maxFlashLoan ===");
+        
+        uint256 maxLoan = flashLoan.maxFlashLoan(address(usdc));
+        
+        console.log("Max flash loan available (USDC):", maxLoan / 1e6);
+        console.log("Expected (USDC):", INITIAL_LIQUIDITY / 1e6);
+        
+        assertGe(maxLoan, INITIAL_LIQUIDITY, "Max loan should be at least initial liquidity");
+        console.log("[PASS] maxFlashLoan works correctly");
+    }
+    
+    function testEIP3156FlashFee() public view {
+        console.log("\n=== Testing EIP-3156: flashFee ===");
+        
+        uint256 fee = flashLoan.flashFee(address(usdc), LOAN_AMOUNT);
+        uint256 expectedFee = (LOAN_AMOUNT * 10) / 100000; // 0.01%
+        
+        console.log("Flash fee for", LOAN_AMOUNT / 1e6, "USDC:", fee);
+        console.log("Expected fee:", expectedFee);
+        
+        assertEq(fee, expectedFee, "Flash fee should be 0.01%");
+        console.log("[PASS] flashFee works correctly");
+    }
+    
+    function testEIP3156UnsupportedToken() public view {
+        console.log("\n=== Testing EIP-3156: Unsupported Token ===");
+        
+        address fakeToken = address(0xdead);
+        
+        uint256 maxLoan = flashLoan.maxFlashLoan(fakeToken);
+        
+        assertEq(maxLoan, 0, "Unsupported token should return 0");
+        console.log("[PASS] Unsupported token correctly returns 0");
     }
 }
 
