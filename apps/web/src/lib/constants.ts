@@ -16,14 +16,6 @@ export const USDC_ADDRESS = '0x3600000000000000000000000000000000000000' as cons
 // Chain ID
 export const ARC_TESTNET_CHAIN_ID = 5042002;
 
-// Legacy addresses (not deployed on Arc Testnet yet)
-// These are here for backwards compatibility with existing hooks
-export const YIELD_AUTOMATOR_ADDRESS = '0x0000000000000000000000000000000000000000' as const; // Not deployed
-export const SIMPLE_AQUA_APP_ADDRESS = '0x0000000000000000000000000000000000000000' as const; // Not deployed
-
-// Strategy indices
-export const SIMPLE_VAULT_STRATEGY = 0; // SimpleAquaApp strategy index
-
 // Re-export Aqua utility functions
 export { 
   buildDockTransaction, 

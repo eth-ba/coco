@@ -47,18 +47,16 @@ const aquaAbi = [
 ] as const;
 
 /**
- * Strategy structure for Aqua Protocol
+ * Strategy structure for FlashLoan contract (single token only)
  */
 export interface AquaStrategy {
   maker: `0x${string}`;
-  token0: `0x${string}`;
-  token1: `0x${string}`;
-  feeBps: bigint;
+  token: `0x${string}`;
   salt: `0x${string}`;
 }
 
 /**
- * Encode a strategy into bytes for Aqua Protocol
+ * Encode a strategy into bytes for FlashLoan contract
  */
 export function encodeStrategy(strategy: AquaStrategy): `0x${string}` {
   return encodeAbiParameters(
@@ -68,9 +66,7 @@ export function encodeStrategy(strategy: AquaStrategy): `0x${string}` {
         type: 'tuple',
         components: [
           { name: 'maker', type: 'address' },
-          { name: 'token0', type: 'address' },
-          { name: 'token1', type: 'address' },
-          { name: 'feeBps', type: 'uint256' },
+          { name: 'token', type: 'address' },
           { name: 'salt', type: 'bytes32' }
         ]
       }
@@ -107,12 +103,10 @@ export function buildShipTransaction(
   amount: bigint,
   appAddress: `0x${string}`
 ) {
-  // Create a simple strategy
+  // Create a FlashLoan strategy (single token)
   const strategy: AquaStrategy = {
     maker: smartAccountAddress,
-    token0: USDC_ADDRESS,
-    token1: USDC_ADDRESS, // Same token for simplicity in MVP
-    feeBps: BigInt(0), // 0% fee
+    token: USDC_ADDRESS,
     salt: '0x0000000000000000000000000000000000000000000000000000000000000001'
   };
 

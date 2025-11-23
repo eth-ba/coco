@@ -4,7 +4,7 @@ import {
   buildDockTransaction,
   calculateStrategyHash,
   USDC_ADDRESS,
-  SIMPLE_AQUA_APP_ADDRESS
+  FLASH_LOAN_ADDRESS
 } from '@/lib/constants';
 import type { AquaStrategy } from '@/lib/aqua';
 
@@ -38,15 +38,13 @@ export function useWithdraw() {
 
       console.log('💸 Withdrawing', amountUSDC, 'USDC from Aqua Protocol');
       console.log('📍 User Address:', smartAccount.address);
-      console.log('📍 SimpleAquaApp:', SIMPLE_AQUA_APP_ADDRESS);
+      console.log('📍 FlashLoan Contract:', FLASH_LOAN_ADDRESS);
 
       // Create the strategy that was used for deposit
-      // This must match the strategy used in the deposit
+      // This must match the strategy used in the deposit (single token for FlashLoan)
       const strategy: AquaStrategy = {
         maker: smartAccount.address as `0x${string}`,
-        token0: USDC_ADDRESS,
-        token1: USDC_ADDRESS, // Same token for simplicity
-        feeBps: BigInt(0), // 0% fee
+        token: USDC_ADDRESS,
         salt: '0x0000000000000000000000000000000000000000000000000000000000000001'
       };
 
@@ -56,7 +54,7 @@ export function useWithdraw() {
 
       // Build dock transaction
       const dockTx = buildDockTransaction(
-        SIMPLE_AQUA_APP_ADDRESS as `0x${string}`,
+        FLASH_LOAN_ADDRESS as `0x${string}`,
         strategyHash
       );
 
