@@ -1,19 +1,26 @@
 import { useState, useEffect } from "react";
-import { useDeposit } from "@/hooks/useDeposit";
-import { createDepositIntent, executeDepositIntent } from "@/lib/eil";
-import { useBalances } from "@/hooks/useBalances";
+import { type ConnectedWallet } from "@privy-io/react-auth";
+import { useDepositWithAccount } from "@/hooks/useDeposit";
+import { useBalancesByAddress } from "@/hooks/useBalances";
 import { base } from "viem/chains";
 import { parseUnits, createWalletClient, http } from "viem";
 import { supportedChains } from "@/lib/chains";
 
-export function DepositForm() {
+interface DepositFormProps {
+  smartAccount?: ConnectedWallet;
+}
+
+export function DepositForm({ smartAccount: propSmartAccount }: DepositFormProps) {
   const [amount, setAmount] = useState("");
   const [selectedChainId, setSelectedChainId] = useState<number>(base.id);
   const [isCrossChain, setIsCrossChain] = useState(false);
   const [eilStatus, setEilStatus] = useState<string | null>(null);
   
-  const { deposit, isLoading: isDepositLoading, error: depositError, txHash, smartAccount } = useDeposit();
-  const { balances, isLoading: isBalancesLoading } = useBalances();
+  // Use prop if available (Dashboard passes it)
+  const smartAccount = propSmartAccount;
+
+  const { deposit, isLoading: isDepositLoading, error: depositError, txHash } = useDepositWithAccount(smartAccount);
+  const { balances, isLoading: isBalancesLoading } = useBalancesByAddress(smartAccount?.address);
 
   // Auto-select chain based on balance and amount
   useEffect(() => {
@@ -55,34 +62,36 @@ export function DepositForm() {
 
     if (isCrossChain) {
       try {
-        setEilStatus("Creating cross-chain intent...");
+        setEilStatus("Initializing EIL Bridge...");
         if (!smartAccount?.address) throw new Error("Smart account not ready");
 
-        // Create WalletClient with custom RPC transport (Tenderly fork)
-        // Use http transport with the custom RPC URL from chains.ts
-        // This ensures transactions go to the fork, not Privy's default mainnet endpoint
+        // Dynamically import EIL service to avoid SSR issues
+        const eilModule = await import("@/lib/eil");
+        const eilService = new eilModule.EILService();
+
+        // Create adapter
         const selectedChain = supportedChains.find(c => c.id === selectedChainId);
         if (!selectedChain) throw new Error(`Chain ${selectedChainId} not supported`);
         
-        // Get the custom RPC URL for this chain
         const customRpcUrl = selectedChain.rpcUrls.default.http[0];
-        
         const walletClient = createWalletClient({
           account: smartAccount.address as `0x${string}`,
           chain: selectedChain,
-          transport: http(customRpcUrl) // Use custom RPC instead of Privy's default mainnet
+          transport: http(customRpcUrl)
         });
 
-        const intent = await createDepositIntent(
-          selectedChainId,
-          base.id,
-          amount,
-          smartAccount.address,
-          walletClient
-        );
+        const accountAdapter = eilModule.createPrivyAccount(walletClient, smartAccount.address as `0x${string}`);
 
         setEilStatus("Bridging funds...");
-        await executeDepositIntent(selectedChainId, base.id, intent);
+        
+        await eilService.createAndExecuteBridge(
+          selectedChainId,
+          base.id,
+          parseUnits(amount, 6),
+          smartAccount.address,
+          accountAdapter,
+          (status) => setEilStatus(status)
+        );
         
         setEilStatus("Deposit initiated! Waiting for arrival...");
         // In a real app, we'd poll for completion here

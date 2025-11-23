@@ -36,14 +36,12 @@ const yieldAutomatorAbi = [
   }
 ] as const;
 
-export function useDeposit() {
-  const { wallets } = useWallets();
+import { type ConnectedWallet } from '@privy-io/react-auth';
+
+export function useDepositWithAccount(smartAccount?: ConnectedWallet) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
-
-  // Get the Privy embedded wallet (Smart Account)
-  const smartAccount = wallets.find((wallet) => wallet.walletClientType === 'privy');
 
   const deposit = async (amountUSDC: string) => {
     if (!smartAccount) {
@@ -148,5 +146,12 @@ export function useDeposit() {
     txHash,
     smartAccount
   };
+}
+
+export function useDeposit() {
+  const { wallets } = useWallets();
+  // Get the Privy embedded wallet (Smart Account)
+  const smartAccount = wallets.find((wallet) => wallet.walletClientType === 'privy');
+  return useDepositWithAccount(smartAccount);
 }
 

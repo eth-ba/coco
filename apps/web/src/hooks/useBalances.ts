@@ -16,17 +16,13 @@ export interface ChainBalance {
   rawBalance: bigint;
 }
 
-export function useBalances() {
-  const { wallets } = useWallets();
+export function useBalancesByAddress(address?: string) {
   const [balances, setBalances] = useState<ChainBalance[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Get the Privy embedded wallet (Smart Account)
-  const smartAccount = wallets.find((wallet) => wallet.walletClientType === 'privy');
-
   const fetchBalances = useCallback(async () => {
-    if (!smartAccount?.address) return;
+    if (!address) return;
 
     setIsLoading(true);
     setError(null);
@@ -43,7 +39,7 @@ export function useBalances() {
             address: usdcAddress as `0x${string}`,
             abi: erc20Abi,
             functionName: 'balanceOf',
-            args: [smartAccount.address as `0x${string}`],
+            args: [address as `0x${string}`],
           });
 
           return {
@@ -73,7 +69,7 @@ export function useBalances() {
     } finally {
       setIsLoading(false);
     }
-  }, [smartAccount?.address]);
+  }, [address]);
 
   useEffect(() => {
     fetchBalances();
@@ -88,4 +84,11 @@ export function useBalances() {
     error,
     refetch: fetchBalances,
   };
+}
+
+export function useBalances() {
+  const { wallets } = useWallets();
+  // Get the Privy embedded wallet (Smart Account)
+  const smartAccount = wallets.find((wallet) => wallet.walletClientType === 'privy');
+  return useBalancesByAddress(smartAccount?.address);
 }

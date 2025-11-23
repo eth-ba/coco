@@ -23,7 +23,8 @@ const customOptimism = createCustomChain(optimism, process.env.NEXT_PUBLIC_OPTIM
 const supportedChains = [customBase, customArbitrum, customOptimism, baseSepolia];
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  return (
+    console.log("🔌 Providers mounting. AppID:", process.env.NEXT_PUBLIC_PRIVY_APP_ID);
+    return (
     <PrivyProvider
       appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID || ""}
       config={{

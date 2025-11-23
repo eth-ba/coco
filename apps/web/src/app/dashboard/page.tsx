@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { DepositForm } from "@/components/DepositForm";
+import { BridgeForm } from "@/components/BridgeForm";
 import { WithdrawModal } from "@/components/WithdrawModal";
 import { useWithdraw } from "@/hooks/useWithdraw";
 import { formatUnits, createPublicClient, http } from "viem";
@@ -14,6 +15,8 @@ import { customBase } from "@/lib/chains";
 export default function Dashboard() {
   const { authenticated, ready, smartAccountAddress, logout } = useAuth();
   const { wallets } = useWallets();
+  console.log("📊 Dashboard mounting. Wallets:", wallets.length, "Authenticated:", authenticated);
+  const smartAccount = wallets.find((w) => w.walletClientType === 'privy');
   const router = useRouter();
   const [usdcBalance, setUsdcBalance] = useState<string>("0");
   const [ethBalance, setEthBalance] = useState<string>("0");
@@ -21,6 +24,7 @@ export default function Dashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
   const [depositedAmount] = useState<string>("0");
+  const [activeTab, setActiveTab] = useState<'deposit' | 'bridge'>('deposit');
   
   const { withdraw, isLoading: isWithdrawing } = useWithdraw();
 
@@ -30,7 +34,6 @@ export default function Dashboard() {
       if (!smartAccountAddress) return;
       
       try {
-        const smartAccount = wallets.find((w) => w.walletClientType === 'privy');
         if (!smartAccount) {
           console.log('❌ No smart account found');
           return;
@@ -87,7 +90,7 @@ export default function Dashboard() {
     fetchBalance();
     const interval = setInterval(fetchBalance, 10000); // Refresh every 10s
     return () => clearInterval(interval);
-  }, [smartAccountAddress, wallets]);
+  }, [smartAccountAddress, smartAccount]);
 
   const copyAddress = () => {
     if (smartAccountAddress) {
@@ -102,7 +105,6 @@ export default function Dashboard() {
     if (!smartAccountAddress) return;
     
     try {
-      const smartAccount = wallets.find((w) => w.walletClientType === 'privy');
       if (!smartAccount) return;
 
       // Use custom RPC
@@ -240,9 +242,34 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* Deposit Form */}
+        {/* Tab Navigation and Forms */}
         <div className="mt-4">
-          <DepositForm />
+          {/* Tab Buttons */}
+          <div className="flex gap-2 mb-6 bg-secondary rounded-xl p-1">
+            <button
+              onClick={() => setActiveTab('deposit')}
+              className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
+                activeTab === 'deposit'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              💰 Deposit
+            </button>
+            <button
+              onClick={() => setActiveTab('bridge')}
+              className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
+                activeTab === 'bridge'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              🌉 Bridge
+            </button>
+          </div>
+
+          {/* Tab Content */}
+          {activeTab === 'deposit' ? <DepositForm smartAccount={smartAccount} /> : <BridgeForm smartAccount={smartAccount} />}
         </div>
       </div>
 

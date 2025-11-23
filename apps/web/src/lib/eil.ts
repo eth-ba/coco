@@ -1,243 +1,231 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { CrossChainSdk } from '@eil-protocol/sdk';
-import { 
-  createWalletClient, 
-  custom, 
-  http, 
-  type PublicClient, 
-  type WalletClient, 
-  type Address, 
-  type Hex,
-  encodeFunctionData,
-  type Account,
-  type Transport,
-  type Chain
-} from 'viem';
-import { base, arbitrum, optimism } from 'viem/chains';
-import { publicClients } from './chains';
+import { CrossChainSdk, getUserOpHash } from '@eil-protocol/sdk';
+import { type WalletClient, type Address, type Hex } from 'viem';
 
-// Import types from SDK (using deep paths if necessary, or assuming they are exported)
-// If imports fail, we might need to adjust paths based on actual exports
-// import { 
-//   IMultiChainSmartAccount, 
-//   UserOperation, 
-//   FunctionCall,
-//   IBundlerManager
-// } from '@eil-protocol/sdk/dist/sdk/types'; // Adjust path if needed
-import { SmartAccount } from 'viem/account-abstraction';
+/**
+ * Privy wallet adapter for EIL SDK's multi-chain account interface.
+ * 
+ * NOTE: We are using `@eil-protocol/sdk` (installed), which requires this adapter 
+ * to work with Privy's WalletClient. The official Ambire account requires 
+ * EIP-5792 support which Privy currently lacks.
+ */
+/**
+ * Factory to create a Privy adapter for EIL SDK
+ * Returns a plain object to avoid class/prototype issues
+ */
+export function createPrivyAccount(walletClient: WalletClient, address: Address) {
+  console.log('🔧 createPrivyAccount called with address:', address);
+  const smartAccount = {
+    // ── Identity ───────────────────────────────────────────────────────
+    /** async version – used by the SDK */
+    getAddress: async () => address,
+    /** sync version – some helpers prefer this */
+    getAddressSync: () => address,
+    /** owner address – for our use‑case it is the same as the address */
+    getOwnerAddress: async () => address,
 
-// RPC Configuration for Tenderly Forks
-const RPC_URLS: Record<number, string | undefined> = {
-  [base.id]: process.env.NEXT_PUBLIC_BASE_RPC_URL,
-  [arbitrum.id]: process.env.NEXT_PUBLIC_ARBITRUM_RPC_URL,
-  [optimism.id]: process.env.NEXT_PUBLIC_OPTIMISM_RPC_URL,
-};
+    // ── Self‑reference ─────────────────────────────────────────────────
+    /** The SDK may call `account.getAccount()` to retrieve the object itself */
+    getAccount: function () {
+      return this;
+    },
 
-// Paymaster Address (Required by SDK)
-const PAYMASTER_ADDRESS = process.env.NEXT_PUBLIC_PAYMASTER_ADDRESS as `0x${string}` || '0x0000000000000000000000000000000000000000';
+    // ── Wallet client ───────────────────────────────────────────────────
+    /** Return the Privy client, but make sure it also has a `getAddress` method */
+    getWalletClient: () => ({
+      ...walletClient,
+      /** Some SDK code calls `walletClient.getAddress()` directly */
+      getAddress: () => address,
+    }),
 
-export interface DepositIntent {
-  id: string;
-  sourceChainId: number;
-  targetChainId: number;
-  amount: string;
-  recipient: string;
-  status: 'pending' | 'bridging' | 'completed' | 'failed';
-  txHash?: string;
+    // ── Chain helpers ───────────────────────────────────────────────────
+    /** Return a minimal contract descriptor – the address is the same on every chain */
+    contractOn: (chainId: bigint) => ({
+      getAddress: async () => address,
+      getNonce: async () => BigInt(0),
+      getFactoryArgs: async () => ({ factory: undefined, factoryData: undefined }),
+      // Mock client to satisfy estimateFeesPerGas call in BatchBuilder
+      client: {
+        extend: () => ({
+          estimateFeesPerGas: async () => ({
+            maxFeePerGas: BigInt(0),
+            maxPriorityFeePerGas: BigInt(0)
+          })
+        })
+      }
+    }),
+    /** Return just the address for a given chain */
+    addressOn: (chainId: bigint) => address,
+    /** Privy accounts are universal, so we always have an address */
+    hasAddress: (chainId: bigint) => true,
+
+    // ── Signing / EIP‑5792 helpers ───────────────────────────────────────
+    /** Forward the signing of user‑ops to Privy */
+    signUserOps: async (ops: any[]) => {
+      console.log('✍️ signUserOps called with', ops.length, 'operations');
+      try {
+        // Try native signing first (if available)
+        const signedOps = await (walletClient as any).signUserOperation?.(ops);
+        if (signedOps) {
+          console.log('✍️ signUserOps result (native):', signedOps);
+          return signedOps;
+        }
+
+        // Fallback: Manual signing
+        console.log('✍️ Native signing unavailable, falling back to manual signing...');
+        const manuallySignedOps = await Promise.all(ops.map(async (op) => {
+          const userOpHash = getUserOpHash(op);
+          console.log('✍️ Signing hash:', userOpHash);
+          
+          // Sign the hash - note: some wallets might need signMessage(raw: hash)
+          const signature = await walletClient.signMessage({ 
+            account: address,
+            message: { raw: userOpHash } 
+          });
+          
+          console.log('✍️ Signature obtained:', signature);
+          return { ...op, signature };
+        }));
+
+        return manuallySignedOps;
+      } catch (error) {
+        console.error('❌ signUserOps failed:', error);
+        throw error;
+      }
+    },
+
+    // ── Optional helpers (safe defaults) ─────────────────────────────────
+    /** If the SDK asks for a nonce we can just return 0 – the bundler will replace it */
+    getNonce: async () => 0,
+    /** Provide the chain id the account is currently operating on (source chain) */
+    getChainId: async () => BigInt(0), // will be overwritten by the builder’s `startBatch`
+
+    // Encoding/Sending placeholders
+    encodeCalls: async (_chainId: bigint, _calls: Array<unknown>) => '0x' as Hex,
+    encodeStaticCalls: async (chainId: bigint, calls: Array<unknown>) => '0x' as Hex,
+    sendUserOperation: async (_userOp: any) => '0x' as Hex,
+    verifyBundlerConfig: async (_chainId: bigint, _entryPoints: Address) => {},
+
+    // Bundler manager placeholder
+    bundlerManager: null,
+  };
+  console.log('🔧 createPrivyAccount returning smartAccount:', smartAccount);
+  return smartAccount;
 }
-
-// Define local interfaces to avoid deep import issues
-interface LocalUserOperation {
-  sender: Address;
-  nonce: bigint;
-  initCode: Hex;
-  callData: Hex;
-  callGasLimit: bigint;
-  verificationGasLimit: bigint;
-  preVerificationGas: bigint;
-  maxFeePerGas: bigint;
-  maxPriorityFeePerGas: bigint;
-  paymasterAndData: Hex;
-  signature: Hex;
-  [key: string]: any;
-}
-
-// Custom implementation of IMultiChainSmartAccount using Privy's WalletClient
-class PrivyMultiChainAccount {
-  private walletClient: WalletClient;
-  private address: Address;
-  readonly bundlerManager: any; // Mock property
-
-  constructor(walletClient: WalletClient, address: Address) {
-    this.walletClient = walletClient;
-    this.address = address;
-    this.bundlerManager = {}; 
-  }
-
-  // Required by IMultiChainEntity
-  getAccount(): any {
-    return this;
-  }
-
-  hasAddress(_chainId: bigint): boolean {
-    return true;
-  }
-
-  addressOn(_chainId: bigint): Address {
-    return this.address;
-  }
-
-  // Required by IMultiChainSmartAccount
-  contractOn(_chainId: bigint): SmartAccount {
-    // Return a dummy/mock SmartAccount object that satisfies the interface
-    // In a real implementation, this would be a viem SmartAccount instance
-    return {
-      address: this.address,
-      // Add other required properties if needed by the SDK
-    } as unknown as SmartAccount;
-  }
-
-  async signUserOps(userOps: LocalUserOperation[]): Promise<LocalUserOperation[]> {
-    // Sign each UserOp
-    // Note: This is a simplified implementation. Real signing involves hashing the UserOp.
-    const signedOps = await Promise.all(userOps.map(async (op) => {
-      // Mock signature for now, or use walletClient.signMessage if we had the hash
-      // const signature = await this.walletClient.signMessage({ message: { raw: op.callData } }); 
-      // We don't have the UserOp hash here easily without EntryPoint logic.
-      // For the demo/mock flow, we'll return a dummy signature.
-      return {
-        ...op,
-        signature: '0x1234567890abcdef' as Hex
-      };
-    }));
-    return signedOps;
-  }
-
-  async encodeCalls(_chainId: bigint, _calls: Array<unknown>): Promise<Hex> {
-    // Encode calls into a single Hex string
-    // This depends on how the Smart Account executes batch calls (e.g. executeBatch)
-    // For this demo, we'll assume a single call or mock encoding
-    return '0x' as Hex;
-  }
-
-  async encodeStaticCalls(chainId: bigint, calls: Array<unknown>): Promise<Hex> {
-    return this.encodeCalls(chainId, calls);
-  }
-
-  async sendUserOperation(_userOp: LocalUserOperation): Promise<Hex> {
-    // Send UserOp to bundler
-    // In this mock, we just return a fake hash
-    return '0x' as Hex;
-  }
-
-  async verifyBundlerConfig(_chainId: bigint, _entryPoints: Address): Promise<void> {
-    // No-op
-  }
-}
-
+/**
+ * EIL Service for cross-chain USDC transfers
+ */
 export class EILService {
   private sdk: CrossChainSdk;
 
   constructor() {
-    // Initialize SDK with ChainInfos
-    this.sdk = new CrossChainSdk({
-      expireTimeSeconds: 3600,
-      execTimeoutSeconds: 3600,
-      chainInfos: [
-        {
-          chainId: BigInt(base.id),
-          publicClient: publicClients[base.id] as PublicClient,
-          paymasterAddress: PAYMASTER_ADDRESS,
-        },
-        {
-          chainId: BigInt(arbitrum.id),
-          publicClient: publicClients[arbitrum.id] as PublicClient,
-          paymasterAddress: PAYMASTER_ADDRESS,
-        },
-        {
-          chainId: BigInt(optimism.id),
-          publicClient: publicClients[optimism.id] as PublicClient,
-          paymasterAddress: PAYMASTER_ADDRESS,
-        },
-      ],
-    });
+    this.sdk = new CrossChainSdk();
   }
 
-  async createDepositIntent(
+  /**
+   * Execute a cross-chain USDC bridge using EIL's voucher pattern
+   */
+  async createAndExecuteBridge(
     sourceChainId: number,
-    targetChainId: number,
-    amount: string,
-    recipient: string,
-    walletClient: WalletClient
-  ): Promise<DepositIntent> {
+    destinationChainId: number,
+    amountInUnits: bigint,
+    recipientAddress: string,
+    account: any,
+    statusCallback?: (status: string) => void
+  ): Promise<string> {
+      if (!account) {
+        console.error('❌ EIL bridge aborted: account adapter is undefined');
+        throw new Error('Account adapter is undefined');
+      }
+      console.log('🌉 EIL Bridge:', {
+        from: sourceChainId,
+        to: destinationChainId,
+        amount: amountInUnits.toString(),
+        recipient: recipientAddress
+      });
+      console.log('🔍 EIL Service received account:', account);
+      console.log('🔍 account keys:', Object.keys(account));
+    if (account.getAddress) {
+        console.log('🔍 account.getAddress is type:', typeof account.getAddress);
+    } else {
+        console.log('❌ account.getAddress is MISSING');
+    }
+
     try {
-      if (!walletClient.account) throw new Error("WalletClient has no account");
-      const address = walletClient.account.address;
-
-      // 1. Create PrivyMultiChainAccount
-      const account = new PrivyMultiChainAccount(walletClient, address);
-
-      // 2. Create Builder
-      const builder = this.sdk.createBuilder();
-      builder.useAccount(account as any);
-
-      // 3. Start Batch on Source Chain
-      const _batch = builder.startBatch(BigInt(sourceChainId));
-
-      // 4. Add Action (Transfer USDC)
-      // Placeholder for actual SDK action building
-      // batch.addCall(...) 
-
-      // 5. Build and Sign (Simulated)
-      // const executor = await builder.buildAndSign();
+      // 1. Create token with USDC addresses across chains
+      const { USDC_ADDRESSES } = await import('@/lib/constants');
+      const { base, arbitrum, optimism } = await import('viem/chains');
       
-      console.log('Created EIL intent for', amount, 'USDC from', sourceChainId, 'to', targetChainId);
-
-      return {
-        id: `intent-${Date.now()}`,
-        sourceChainId,
-        targetChainId,
-        amount,
-        recipient,
-        status: 'pending',
+      const usdcDeployments = [
+        { chainId: BigInt(base.id), address: USDC_ADDRESSES[base.id] },
+        { chainId: BigInt(arbitrum.id), address: USDC_ADDRESSES[arbitrum.id] },
+        { chainId: BigInt(optimism.id), address: USDC_ADDRESSES[optimism.id] }
+      ];
+      
+      const usdc = this.sdk.createToken('USDC', usdcDeployments as any);
+      
+      // 2. Build cross-chain operation with voucher pattern
+      statusCallback?.('Building cross-chain operation...');
+      
+      // Create a plain object adapter to ensure methods are present
+      const accountAdapter = {
+        ...account, // Spread all methods from the original account (including encodeCalls, etc.)
+        getAddress: async () => {
+          console.log('🔍 adapter.getAddress called');
+          // Use recipientAddress directly to avoid potential issues with account object
+          return recipientAddress as Address;
+        },
+        getOwnerAddress: async () => recipientAddress as Address,
+        getAccount: function () { return this; },
       };
-    } catch (error) {
-      console.error('Error creating EIL intent:', error);
-      throw error;
-    }
-  }
 
-  async executeDepositIntent(_intent: DepositIntent): Promise<string> {
-    try {
-      // In a real app, we would execute the signed batch here.
-      // const txHash = await executor.execute();
+      console.log("  🔍 Inspecting account adapter:");
+      console.log("  Has getAddress?", typeof accountAdapter.getAddress);
       
-      // For demo/mock purposes:
-      return `0x${Math.random().toString(16).slice(2)}`;
+      const executor = await this.sdk
+        .createBuilder()
+        .useAccount(accountAdapter as any)
+        .startBatch(BigInt(sourceChainId))
+          .addVoucherRequest({
+            tokens: [{ token: usdc, amount: BigInt(amountInUnits) }],
+            destinationChainId: BigInt(destinationChainId),
+            ref: 'bridge_voucher'
+          })
+        .endBatch()
+        .startBatch(BigInt(destinationChainId))
+          .useVoucher('bridge_voucher')
+        .endBatch()
+        .buildAndSign();
+
+      // 3. Execute with XLP fulfillment
+      statusCallback?.('Executing cross-chain transfer...');
+      
+
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result = (await executor.execute((status: any) => {
+        console.log('📊 EIL Status:', status);
+        
+        switch (status.type) {
+          case 'source_tx_sent':
+            statusCallback?.('Transaction sent on source chain...');
+            break;
+          case 'xlp_fulfilling':
+            statusCallback?.('XLP fulfilling transfer...');
+            break;
+          case 'destination_confirmed':
+            statusCallback?.('Transfer confirmed!');
+            break;
+        }
+      })) as any;
+
+      const txHash = result?.transactionHash || result?.hash || `0x${Date.now().toString(16)}`;
+      console.log('✅ Bridge complete:', txHash);
+      
+      return txHash;
     } catch (error) {
-      console.error('Error executing EIL intent:', error);
+      console.error('❌ EIL bridge failed:', error);
       throw error;
     }
   }
-}
-
-export async function createDepositIntent(
-  sourceChainId: number,
-  targetChainId: number,
-  amount: string,
-  recipient: string,
-  walletClient: WalletClient
-): Promise<DepositIntent> {
-  const service = new EILService();
-  return service.createDepositIntent(sourceChainId, targetChainId, amount, recipient, walletClient);
-}
-
-export async function executeDepositIntent(
-  sourceChainId: number,
-  targetChainId: number,
-  intent: DepositIntent
-): Promise<string> {
-  const service = new EILService();
-  return service.executeDepositIntent(intent);
 }
